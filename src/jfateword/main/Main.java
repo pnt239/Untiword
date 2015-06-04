@@ -7,6 +7,7 @@ package jfateword.main;
 
 import com.alee.laf.WebLookAndFeel;
 import javax.swing.SwingUtilities;
+import jfateword.gui.JFWGui;
 import jfateword.gui.WordGui;
 
 /**
@@ -27,7 +28,7 @@ public class Main {
                 //WebLookAndFeel.setDecorateFrames ( true );
 
                 // Initializing editor dialog
-                WordGui gui = new WordGui();
+                JFWGui gui = new JFWGui();
                 gui.setLocationRelativeTo(null);
                 gui.setVisible(true);
             }
