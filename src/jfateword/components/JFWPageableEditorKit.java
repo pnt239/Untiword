@@ -17,10 +17,17 @@ import javax.swing.text.ViewFactory;
  * @author NThanh
  */
 public class JFWPageableEditorKit extends StyledEditorKit {
+    
+    PageableViewFactory factory = new PageableViewFactory();
+    
     /**
      * Constructs kit instance
      */
     public JFWPageableEditorKit() {
+    }
+    
+    public ViewFactory getViewFactory() {
+        return factory;
     }
     
     /**
