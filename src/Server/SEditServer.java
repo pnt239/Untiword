@@ -10,6 +10,7 @@ import javax.swing.JOptionPane;
 import Model.ServerRequestDQ;
 import Server.SEditDocument;
 import Server.SEditThread;
+import untiword.gui.server.UWServerGui;
 
 /**
  * The SEditServer class is the main entry point of the server side of the
@@ -50,8 +51,9 @@ public class SEditServer {
     private int documentIDCounter;
     // a flag signifying whether shutdown has been requested
     private boolean die;
-
-    /**
+    private UWServerGui serverGui;
+    
+        /**
      * Creates a new SEditServer object listening for connections on the
      * specified port
      * 
@@ -69,12 +71,16 @@ public class SEditServer {
 
         this.documents = new HashMap<Integer, SEditDocument>();
         this.documentIDCounter = 0;
-
+        serverGui = new UWServerGui();
+        
+        serverGui.setLocationRelativeTo(null);
+        serverGui.setVisible(true);
+        serverGui.getText().append("Server created on port " + port + "\n");
         this.die = false;
-
+        
         System.out.println("Server created on port " + port);
     }
-
+    
     /**
      * Reacts appropriately to an incoming request: 
      * Incoming CONTROL requests: 
@@ -185,10 +191,16 @@ public class SEditServer {
     private synchronized void distributeMessage(String message) {
         System.out.println("Server distributing message to connected clients: "
                 + message);
+        serverGui.getText().append("Server distributing message to connected clients: "
+                + message + "\n");
 
         for (SEditThread user : users.values()) {
             user.sendMessage(message);
         }
+    }
+    
+    public void appendTextArea(String text){
+        serverGui.getText().append(text);
     }
 
     /**
@@ -227,6 +239,7 @@ public class SEditServer {
      * SEditThread for them when it hears one
      */
     public void serve() {
+        
         while (true) {
             try {
                 String newUserID;

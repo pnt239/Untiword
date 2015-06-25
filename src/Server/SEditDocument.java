@@ -69,6 +69,7 @@ public class SEditDocument {
 
         System.out.println("Current serverHistory for Document " + documentID
                 + ": " + serverHistory.toString());
+        
 
         distributeMessage(inclusionCandidate.toString());
     }

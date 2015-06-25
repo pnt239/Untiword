@@ -66,6 +66,8 @@ public class SEditThread extends Thread {
             handleConnection(socket);
         } catch (IOException e) {
             System.out.println("Problem closing the IO streams");
+            server.appendTextArea("Problem closing the IO streams \n");
+            
         }
     }
 
@@ -76,7 +78,7 @@ public class SEditThread extends Thread {
      *            to be sent
      */
     public void sendMessage(String message) {
-        out.println(message);
+        out.println(message);        
     }
 
     /**
@@ -100,6 +102,7 @@ public class SEditThread extends Thread {
                 if (line != null) {
                     if (line.equals("BYE")) {
                         System.out.println("Disconnecting user");
+                        server.appendTextArea("Disconnecting user \n");
                         server.removeUser(this);
                         break;
                     }
@@ -107,6 +110,8 @@ public class SEditThread extends Thread {
 
                 System.out.println("Incoming message from " + userID + ": "
                         + line);
+                server.appendTextArea("Incoming message from " + userID + ": "
+                        + line + "\n");
 
                 // only one thread can send a request at a time, others
                 // have to wait
