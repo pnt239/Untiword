@@ -31,6 +31,8 @@ public class Main {
                 JFWGui gui = new JFWGui();
                 gui.setLocationRelativeTo(null);
                 gui.setVisible(true);
+                
+                //
             }
         } );
     }
