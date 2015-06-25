@@ -23,7 +23,8 @@ public class UWEditor extends JScrollPane implements ActionListener{
     }
     
     public UWEditor() {
-        super(new UWEditablePane(), ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        //super(new UWEditablePane(), ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        super(new UWEditablePane());
         init();
     }
     

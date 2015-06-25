@@ -5,6 +5,8 @@
  */
 package untiword.components;
 
+import java.awt.print.PageFormat;
+import java.awt.print.Paper;
 import javax.swing.JEditorPane;
 
 /**
@@ -16,7 +18,12 @@ public class UWEditablePane extends JEditorPane {
     
     public UWEditablePane() {
         jPageableEditorKit = new UWPageableEditorKit();
-        
+        //jPageableEditorKit.setHeader(jPageableEditorKit.createHeader());
+        //jPageableEditorKit.setFooter(jPageableEditorKit.createFooter());
         super.setEditorKit(jPageableEditorKit);
+        
+        PageFormat pf = new PageFormat();
+        pf.setPaper(new Paper());
+        final UWPaginationPrinter pp = new UWPaginationPrinter(pf, this);
     }
 }

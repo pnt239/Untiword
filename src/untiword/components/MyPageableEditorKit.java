@@ -1,98 +1,153 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package untiword.components;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Insets;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Shape;
-import javax.swing.JComponent;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BoxView;
-import javax.swing.text.ComponentView;
-import javax.swing.text.Element;
-import javax.swing.text.IconView;
-import javax.swing.text.LabelView;
-import javax.swing.text.ParagraphView;
-import javax.swing.text.Position;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledEditorKit;
-import javax.swing.text.View;
-import javax.swing.text.ViewFactory;
-
 /**
- *
- * @author NThanh
+ * @author Stanislav Lapitsky
+ * @version 1.0
  */
-public class UWPageableEditorKit extends StyledEditorKit {
+
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.print.*;
+import javax.swing.*;
+import javax.swing.text.*;
+import java.awt.geom.AffineTransform;
+import javax.swing.event.*;
+
+public class MyPageableEditorKit extends StyledEditorKit {
 
     PageableViewFactory factory = new PageableViewFactory();
-
     protected int pageWidth = 150;
     protected int pageHeight = 200;
+    public static int DRAW_PAGE_INSET = 15;
+    public static String PAGE_BREAK_ATTR_NAME="page_break_attribute";
     protected Insets pageMargins = new Insets(10, 10, 10, 10);
 
-    public static int DRAW_PAGE_INSET = 15;
-    public static String PAGE_BREAK_ATTR_NAME = "page_break_attribute";
-
-    //protected JEditorPane header;
-    //protected JEditorPane footer;
+    protected JEditorPane header;
+    protected JEditorPane footer;
     protected boolean isValidHF;
-    public static int HF_SHIFT = 3;
-    boolean isPageBreakInsertion = false;
+    public static int HF_SHIFT=3;
+    boolean isPageBreakInsertion=false;
+    
+    DocumentListener relayoutListener=new DocumentListener() {
+        public void insertUpdate(DocumentEvent e) {
+            relayout();
+        }
+
+        public void removeUpdate(DocumentEvent e) {
+            relayout();
+        }
+
+        public void changedUpdate(DocumentEvent e) {
+            relayout();
+        }
+
+        protected void relayout() {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    JEditorPane parent=null;
+                    int lastFooterHeight=0;
+                    if (footer !=null && footer.getParent()!=null && footer.getParent() instanceof JEditorPane) {
+                        parent=(JEditorPane)footer.getParent();
+                        lastFooterHeight=footer.getHeight();
+                    }
+                    else if (header !=null && header.getParent()!=null && header.getParent() instanceof JEditorPane) {
+                        parent=(JEditorPane)header.getParent();
+                    }
+                    isValidHF = false;
+                    validateHF();
+                    if (footer!=null && lastFooterHeight!=footer.getHeight()) {
+                        int shift=lastFooterHeight-footer.getHeight();
+                        footer.setLocation(footer.getX(),footer.getY()+shift);
+                    }
+                    ( (SectionView) parent.getUI().getRootView(parent).getView(0)).layout(0, Short.MAX_VALUE);
+                    parent.repaint();
+                }
+            });
+        }
+    };
 
     /**
      * Constructs kit instance
      */
-    public UWPageableEditorKit() {
+    public MyPageableEditorKit() {
     }
+    
+    public JFrame init() {
+        JFrame frame = new JFrame("Pagination");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        final JEditorPane editor = new JEditorPane();
+        editor.setEditorKit(this);
+//        editor.addCaretListener(new CaretListener() {
+//            public void caretUpdate(CaretEvent e) {
+//                if (!isPageBreakInsertion ) {
+//                    ( (StyledEditorKit) editor.getEditorKit()).getInputAttributes().removeAttribute(PAGE_BREAK_ATTR_NAME);
+//                }
+//            }
+//        });
+        this.setHeader(createHeader());
+        this.setFooter(createFooter());
+        PageFormat pf = new PageFormat();
+        pf.setPaper(new Paper());
+        final MyPaginationPrinter pp = new MyPaginationPrinter(pf, editor);
+        JScrollPane scroll = new JScrollPane(editor);
+        frame.getContentPane().add(scroll);
+        JToolBar tb=new JToolBar();
+        JButton bPrint = new JButton("Print to default printer");
+        
+        JButton bInsertPageBreak = new JButton("Insert page break");
+        bInsertPageBreak.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                insertPageBreak(editor);
+            }
+        });
+        tb.add(bPrint);
+        tb.add(bInsertPageBreak);
+        frame.getContentPane().add(tb, BorderLayout.NORTH);
+        frame.setBounds(GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds());
 
-    /**
-     * Gets page width
-     *
-     * @return Width in pixels
-     */
-    public int GetPageWidth() {
-        return pageWidth;
+        return frame;
+    }
+    
+    public static void main(String[] args) {
+        new MyPageableEditorKit().init().setVisible(true);
     }
 
     /**
      * Sets page width
-     *
-     * @param width Value in pixels
+     * @param width int width value in pixels
      */
-    public void SetPageWidth(int width) {
+    public void setPageWidth(int width) {
         pageWidth = width;
         isValidHF=false;
     }
 
     /**
-     * Gets page height
-     *
-     * @return Page height in pixels
+     * gets page width
+     * @return int width in pixels
      */
-    public int GetPageHeight() {
-        return pageHeight;
+    public int getPageWidth() {
+        return pageWidth;
     }
 
     /**
      * Sets page height
-     *
-     * @param height Value in pixels
+     * @param height int height in pixels
      */
-    public void SetPageHeight(int height) {
+    public void setPageHeight(int height) {
         pageHeight = height;
     }
 
     /**
-     * Sets page margins (distance between page content and page edge).
-     *
+     * Gets page height
+     * @return int height in pixels
+     */
+    public int getPageHeight() {
+        return pageHeight;
+    }
+
+    /**
+     * Sets page margins (distance between page content and page edge.
      * @param margins Insets margins.
      */
     public void setPageMargins(Insets margins) {
@@ -100,9 +155,38 @@ public class UWPageableEditorKit extends StyledEditorKit {
         isValidHF=false;
     }
 
+    public void setHeader(JEditorPane header) {
+        this.header=header;
+        header.getDocument().addDocumentListener(relayoutListener);
+        isValidHF=false;
+    }
+    public void setFooter(JEditorPane footer) {
+        this.footer=footer;
+        footer.getDocument().addDocumentListener(relayoutListener);
+        isValidHF=false;
+    }
+    public JEditorPane getHeader() {
+        return header;
+    }
+    public JEditorPane getFooter() {
+        return footer;
+    }
+
     protected void calculateHFSizes() {
         int hfWidth=pageWidth-pageMargins.left-pageMargins.right-2*DRAW_PAGE_INSET;
         int maxHeight=(pageHeight-pageMargins.top-pageMargins.bottom-2*DRAW_PAGE_INSET)/2;
+
+        if (header!=null) {
+            header.setSize(hfWidth, pageHeight);
+            int hHeight = Math.min(maxHeight, header.getPreferredSize().height);
+            header.setSize(hfWidth, hHeight);
+        }
+
+        if (footer!=null) {
+            footer.setSize(hfWidth, pageHeight);
+            int fHeight = Math.min(maxHeight, footer.getPreferredSize().height);
+            footer.setSize(hfWidth, fHeight);
+        }
     }
 
     public void validateHF() {
@@ -112,34 +196,98 @@ public class UWPageableEditorKit extends StyledEditorKit {
             isValidHF=true;
         }
     }
-    
-    @Override
+
+    public JEditorPane createHeader() {
+        JEditorPane header=new JEditorPane();
+        header.setEditorKit(new StyledEditorKit());
+        try {
+            header.getDocument().insertString(0, "header", new SimpleAttributeSet());
+        }
+        catch (BadLocationException ex) {
+            //can't happen
+        }
+
+        return header;
+    }
+
+    public JEditorPane createFooter() {
+        JEditorPane footer=new JEditorPane();
+        footer.setEditorKit(new StyledEditorKit());
+        try {
+            footer.getDocument().insertString(0, "footer", new SimpleAttributeSet());
+        }
+        catch (BadLocationException ex) {
+            //can't happen
+        }
+
+        return footer;
+    }
+
+    /**
+     * gets kit view factory.
+     * @return ViewFactory
+     */
     public ViewFactory getViewFactory() {
         return factory;
     }
 
     /**
-     * The view factory class creates custom views for pagination root view
-     * (SectionView class) and paragraph (PageableParagraphView class)
+     * inserts page break element in current caret location
+     */
+    public void insertPageBreak(final JEditorPane editor) {
+        int caretPos=editor.getCaretPosition();
+        final SimpleAttributeSet breakAttrs=new SimpleAttributeSet();
+        breakAttrs.addAttribute(PAGE_BREAK_ATTR_NAME, Boolean.TRUE);
+        DefaultStyledDocument doc=(DefaultStyledDocument)editor.getDocument();
+        try {
+            isPageBreakInsertion=true;
+            char ch=doc.getText(caretPos,1).charAt(0);
+            if (ch!='\n') {
+                doc.insertString(caretPos, "\n", breakAttrs);
+                caretPos++;
+            }
+            else {
+                Element par=doc.getParagraphElement(caretPos);
+                caretPos=par.getEndOffset()-1;
+            }
+            final int pos=caretPos;
+            ( (StyledDocument) editor.getDocument()).setCharacterAttributes(pos, 1, breakAttrs, false);
+            isPageBreakInsertion=false;
+        }
+        catch (BadLocationException ex) {
+            //do nothing
+        }
+    }
+
+    /**
+     * The view factory class creates custom views for pagination
+     * root view (SectionView class) and paragraph (PageableParagraphView class)
      *
-     * @author Pham Ngoc Thanh
+     * @author Stanislav Lapitsky
      * @version 1.0
      */
     class PageableViewFactory implements ViewFactory {
-
-        @Override
+        /**
+         * Creates view for specified element.
+         * @param elem Element parent element
+         * @return View created view instance.
+         */
         public View create(Element elem) {
             String kind = elem.getName();
             if (kind != null) {
                 if (kind.equals(AbstractDocument.ContentElementName)) {
                     return new LabelView(elem);
-                } else if (kind.equals(AbstractDocument.ParagraphElementName)) {
+                }
+                else if (kind.equals(AbstractDocument.ParagraphElementName)) {
                     return new PageableParagraphView(elem);
-                } else if (kind.equals(AbstractDocument.SectionElementName)) {
+                }
+                else if (kind.equals(AbstractDocument.SectionElementName)) {
                     return new SectionView(elem, View.Y_AXIS);
-                } else if (kind.equals(StyleConstants.ComponentElementName)) {
+                }
+                else if (kind.equals(StyleConstants.ComponentElementName)) {
                     return new ComponentView(elem);
-                } else if (kind.equals(StyleConstants.IconElementName)) {
+                }
+                else if (kind.equals(StyleConstants.IconElementName)) {
                     return new IconView(elem);
                 }
             }
@@ -152,7 +300,7 @@ public class UWPageableEditorKit extends StyledEditorKit {
     /**
      * Root view which perform pagination and paints frame around pages.
      *
-     * @author Pham Ngoc Thanh
+     * @author Stanislav Lapitsky
      * @version 1.0
      */
     class SectionView extends BoxView {
@@ -169,9 +317,9 @@ public class UWPageableEditorKit extends StyledEditorKit {
 
         /**
          * Gets amount of pages
-         * @return Page count
+         * @return int
          */
-        public int GetPageCount() {
+        public int getPageCount() {
             return pageNumber;
         }
 
@@ -181,7 +329,6 @@ public class UWPageableEditorKit extends StyledEditorKit {
          * @param width the width (inside of the insets) >= 0
          * @param height the height (inside of the insets) >= 0
          */
-        @Override
         public void layout(int width, int height) {
             width = pageWidth - 2 * DRAW_PAGE_INSET - pageMargins.left - pageMargins.right;
             this.setInsets( (short) (DRAW_PAGE_INSET + pageMargins.top), (short) (DRAW_PAGE_INSET + pageMargins.left), (short) (DRAW_PAGE_INSET + pageMargins.bottom),
@@ -195,7 +342,6 @@ public class UWPageableEditorKit extends StyledEditorKit {
          *
          * overriddedn
          */
-        @Override
         public float getMaximumSpan(int axis) {
             return getPreferredSpan(axis);
         }
@@ -206,7 +352,6 @@ public class UWPageableEditorKit extends StyledEditorKit {
          *
          * overriddedn
          */
-        @Override
         public float getMinimumSpan(int axis) {
             return getPreferredSpan(axis);
         }
@@ -216,16 +361,14 @@ public class UWPageableEditorKit extends StyledEditorKit {
          * axis.
          * overriddedn
          */
-        @Override
         public float getPreferredSpan(int axis) {
-            float span;
+            float span = 0;
             if (axis == View.X_AXIS) {
                 span = pageWidth;
             }
             else {
-                span = pageHeight * GetPageCount();
+                span = pageHeight * getPageCount();
             }
-            
             return span;
         }
 
@@ -237,7 +380,6 @@ public class UWPageableEditorKit extends StyledEditorKit {
          * @param offsets int[]
          * @param spans int[]
          */
-        @Override
         protected void layoutMajorAxis(int targetSpan, int axis, int[] offsets, int[] spans) {
             super.layoutMajorAxis(targetSpan, axis, offsets, spans);
             //validate header and footer sizes if necessary
@@ -246,8 +388,8 @@ public class UWPageableEditorKit extends StyledEditorKit {
 
             int n = offsets.length;
             pageNumber = 0;
-            int headerHeight=0;//header!=null ? header.getHeight() +HF_SHIFT:0;
-            int footerHeight=0;//footer!=null ? footer.getHeight() +HF_SHIFT:0;
+            int headerHeight=header!=null ? header.getHeight() +HF_SHIFT:0;
+            int footerHeight=footer!=null ? footer.getHeight() +HF_SHIFT:0;
             int totalOffset = headerHeight;
             for (int i = 0; i < n; i++) {
                 offsets[i] = totalOffset;
@@ -298,12 +440,22 @@ public class UWPageableEditorKit extends StyledEditorKit {
                 return false;
             }
             else {
-                return pb;
+                return pb.booleanValue();
             }
         }
 
         private void addHF() {
-            //JTextComponent text = (JTextComponent) getContainer();
+            JTextComponent text = (JTextComponent) getContainer();
+            if (text!=null) {
+                if (!isAdded(text,header)) {
+                    text.add(header);
+                    header.setLocation(DRAW_PAGE_INSET + pageMargins.left, DRAW_PAGE_INSET + pageMargins.top);
+                }
+                if (!isAdded(text,footer)) {
+                    footer.setLocation(DRAW_PAGE_INSET + pageMargins.left, pageHeight - DRAW_PAGE_INSET - pageMargins.bottom - footer.getHeight());
+                    text.add(footer);
+                }
+            }
         }
 
         protected boolean isAdded(JComponent text, JComponent c) {
@@ -314,16 +466,26 @@ public class UWPageableEditorKit extends StyledEditorKit {
             }
             return false;
         }
-        
-        @Override
         public int viewToModel(float x, float y, Shape a, Position.Bias[] bias) {
             Point location=getClickedHFLocation(x,y);
             if (location!=null) {
                 if (location.y % pageHeight < pageHeight / 2) {
                     //header
+                    header.setLocation(location);
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            header.requestFocus();
+                        }
+                    });
                 }
                 else {
                     //footer
+                    footer.setLocation(location);
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            footer.requestFocus();
+                        }
+                    });
                 }
                 return -1;
             }
@@ -336,12 +498,12 @@ public class UWPageableEditorKit extends StyledEditorKit {
                    && x <= pageWidth - DRAW_PAGE_INSET - pageMargins.right)) {
                 return null;
             }
-            int headerHeight=0;//getHeader().getHeight();
-            int footerHeight=0;//getFooter().getHeight();
+            int headerHeight=getHeader().getHeight();
+            int footerHeight=getFooter().getHeight();
             int headerStartY=DRAW_PAGE_INSET + pageMargins.top;
             int footerStartY=pageHeight - DRAW_PAGE_INSET - pageMargins.bottom - footerHeight;
             int hfWidth=pageWidth-pageMargins.left-pageMargins.right-2*DRAW_PAGE_INSET;
-            for (int i=0; i<GetPageCount(); i++) {
+            for (int i=0; i<getPageCount(); i++) {
                 if (y<headerStartY) {
                     return null;
                 }
@@ -365,7 +527,7 @@ public class UWPageableEditorKit extends StyledEditorKit {
         public void paint(Graphics g, Shape a) {
             Rectangle alloc = (a instanceof Rectangle) ? (Rectangle) a : a.getBounds();
             Shape baseClip = g.getClip().getBounds();
-            int pageCount = GetPageCount();
+            int pageCount = getPageCount();
             Rectangle page = new Rectangle();
             page.x = alloc.x;
             page.y = alloc.y;
@@ -375,8 +537,8 @@ public class UWPageableEditorKit extends StyledEditorKit {
             for (int i = 0; i < pageCount; i++) {
                 page.y = alloc.y + pageHeight * i;
                 paintPageFrame(g, page, (Rectangle) baseClip);
-                //paintHeader(g, i, page);
-                //paintFooter(g, i, page);
+                paintHeader(g, i, page);
+                paintFooter(g, i, page);
                 g.setColor(Color.blue);
                 String sN = Integer.toString(i + 1);
                 String pageStr = "Page: " + sN;
@@ -405,7 +567,42 @@ public class UWPageableEditorKit extends StyledEditorKit {
                 g.fillRect(page.x, alloc.y + page.height * pageCount, w, h);
             }
         }
-        
+
+        protected void paintHeader(Graphics g, int pageIndex, Rectangle page) {
+            Graphics2D g2d=(Graphics2D)g;
+            if (header!=null) {
+                AffineTransform old=g2d.getTransform();
+                g2d.translate(DRAW_PAGE_INSET+pageMargins.left,DRAW_PAGE_INSET+pageMargins.top+pageIndex*pageHeight);
+                boolean isCaretVisible=header.getCaret().isVisible();
+                boolean isCaretSelectionVisible=header.getCaret().isSelectionVisible();
+                header.getCaret().setVisible(false);
+                header.getCaret().setSelectionVisible(false);
+                header.paint(g2d);
+                header.getCaret().setVisible(isCaretVisible);
+                header.getCaret().setSelectionVisible(isCaretSelectionVisible);
+                g2d.setColor(Color.lightGray);
+                g2d.draw(new Rectangle(-1,-1,header.getWidth()+1,header.getHeight()+1));
+                g2d.setTransform(old);
+            }
+        }
+
+        protected void paintFooter(Graphics g, int pageIndex, Rectangle page) {
+            Graphics2D g2d=(Graphics2D)g;
+            if (footer!=null) {
+                AffineTransform old=g2d.getTransform();
+                g2d.translate(DRAW_PAGE_INSET+pageMargins.left,(pageIndex+1)*pageHeight-DRAW_PAGE_INSET-pageMargins.bottom-footer.getHeight());
+                boolean isCaretVisible=footer.getCaret().isVisible();
+                boolean isCaretSelectionVisible=footer.getCaret().isSelectionVisible();
+                footer.getCaret().setVisible(false);
+                footer.getCaret().setSelectionVisible(false);
+                footer.paint(g2d);
+                footer.getCaret().setVisible(isCaretVisible);
+                footer.getCaret().setSelectionVisible(isCaretSelectionVisible);
+                g2d.setColor(Color.lightGray);
+                g2d.draw(new Rectangle(-1,-1,footer.getWidth()+1,footer.getHeight()+1));
+                g2d.setTransform(old);
+            }
+        }
         /**
          * Paints frame for specified page
          * @param g Graphics
@@ -443,13 +640,12 @@ public class UWPageableEditorKit extends StyledEditorKit {
     }
 
     /**
-     * Represents multi page paragraph.
+     * Represents multipage paragraph.
      *
-     * @author Pham Ngoc Thanh
+     * @author Stanislav Lapitsky
      * @version 1.0
      */
     class PageableParagraphView extends ParagraphView implements UWMultiPageView {
-
         protected int additionalSpace = 0;
         protected int breakSpan = 0;
         protected int pageOffset = 0;
@@ -459,104 +655,107 @@ public class UWPageableEditorKit extends StyledEditorKit {
         public PageableParagraphView(Element elem) {
             super(elem);
         }
-        
-        @Override
+
         public void layout(int width, int height) {
             super.layout(width, height);
         }
 
-        @Override
         protected void layoutMajorAxis(int targetSpan, int axis, int[] offsets, int[] spans) {
             super.layoutMajorAxis(targetSpan, axis, offsets, spans);
-            //performMultiPageLayout(targetSpan, axis, offsets, spans);
+            performMultiPageLayout(targetSpan, axis, offsets, spans);
         }
 
         /**
          * Layout paragraph's content splitting between pages if needed.
          * Calculates shifts and breaks for parent view (SectionView)
-         *
          * @param targetSpan int
          * @param axis int
          * @param offsets int[]
          * @param spans int[]
          */
-        @Override
         public void performMultiPageLayout(int targetSpan, int axis, int[] offsets, int[] spans) {
-            if (breakSpan == 0) {
+            if (breakSpan == 0)
                 return;
-            }
-
             int space = breakSpan;
 
             additionalSpace = 0;
             endPageNumber = startPageNumber;
             int topInset = this.getTopInset();
             int offs = 0;
-            int headerHeight = 0;
-            int footerHeight = 0;
-
+            int headerHeight=getHeaderHeight();
+            int footerHeight=getFooterHeight();
             for (int i = 0; i < offsets.length; i++) {
                 if (offs + spans[i] + topInset > space) {
                     int newOffset = endPageNumber * pageHeight;
-                    int addSpace = newOffset - (startPageNumber - 1) * pageHeight - pageOffset - offs - topInset - headerHeight;
+                    int addSpace = newOffset - (startPageNumber - 1) * pageHeight - pageOffset - offs - topInset-headerHeight;
                     additionalSpace += addSpace;
                     offs += addSpace;
                     for (int j = i; j < offsets.length; j++) {
                         offsets[j] += addSpace;
                     }
                     endPageNumber++;
-                    space = (endPageNumber * pageHeight - 2 * DRAW_PAGE_INSET - pageMargins.top - pageMargins.bottom) - (startPageNumber - 1) * pageHeight - pageOffset - footerHeight;
+                    space = (endPageNumber * pageHeight - 2 * DRAW_PAGE_INSET - pageMargins.top - pageMargins.bottom) - (startPageNumber - 1) * pageHeight - pageOffset-footerHeight;
                 }
                 offs += spans[i];
             }
         }
 
+        protected int getHeaderHeight() {
+            JTextComponent text = (JTextComponent)getContainer();
+            if (text!=null && text instanceof JEditorPane && ((JEditorPane)text).getEditorKit() instanceof MyPageableEditorKit) {
+                MyPageableEditorKit kit=(MyPageableEditorKit)((JEditorPane)text).getEditorKit();
+                if (kit.getHeader()!=null) {
+                    return kit.getHeader().getHeight()+MyPageableEditorKit.HF_SHIFT;
+                }
+            }
+            return 0;
+        }
+        protected int getFooterHeight() {
+            JTextComponent text = (JTextComponent)getContainer();
+            if (text!=null && ((JEditorPane)text).getEditorKit() instanceof MyPageableEditorKit) {
+                MyPageableEditorKit kit=(MyPageableEditorKit)((JEditorPane)text).getEditorKit();
+                if (kit.getFooter()!=null) {
+                    return kit.getFooter().getHeight()+MyPageableEditorKit.HF_SHIFT;
+                }
+            }
+            return 0;
+        }
         /**
          * Gets view's start page number
-         *
-         * @return Page number
+         * @return page number
          */
-        @Override
         public int getStartPageNumber() {
             return startPageNumber;
         }
 
         /**
          * Gets view's end page number
-         *
          * @return page number
          */
-        @Override
         public int getEndPageNumber() {
             return endPageNumber;
         }
 
         /**
          * Gets view's extra space (space between pages)
-         *
          * @return extra space
          */
-        @Override
         public int getAdditionalSpace() {
             return additionalSpace;
         }
 
         /**
          * Gets view's break span
-         *
          * @return break span
          */
-        @Override
         public int getBreakSpan() {
             return breakSpan;
         }
 
         /**
          * Gets view's offsets on the page
-         *
          * @return offset
          */
-        @Override
         public int getPageOffset() {
             return pageOffset;
         }
@@ -566,7 +765,6 @@ public class UWPageableEditorKit extends StyledEditorKit {
          *
          * @param startPageNumber page number
          */
-        @Override
         public void setStartPageNumber(int startPageNumber) {
             this.startPageNumber = startPageNumber;
         }
@@ -576,7 +774,6 @@ public class UWPageableEditorKit extends StyledEditorKit {
          *
          * @param endPageNumber page number
          */
-        @Override
         public void setEndPageNumber(int endPageNumber) {
             this.endPageNumber = endPageNumber;
         }
@@ -586,7 +783,6 @@ public class UWPageableEditorKit extends StyledEditorKit {
          *
          * @param additionalSpace additional space
          */
-        @Override
         public void setAdditionalSpace(int additionalSpace) {
             this.additionalSpace = additionalSpace;
         }
@@ -596,7 +792,6 @@ public class UWPageableEditorKit extends StyledEditorKit {
          *
          * @param breakSpan break span
          */
-        @Override
         public void setBreakSpan(int breakSpan) {
             this.breakSpan = breakSpan;
         }
@@ -606,10 +801,8 @@ public class UWPageableEditorKit extends StyledEditorKit {
          *
          * @param pageOffset offset
          */
-        @Override
         public void setPageOffset(int pageOffset) {
             this.pageOffset = pageOffset;
         }
-
     }
 }
