@@ -7,14 +7,14 @@ package untiword.main;
 
 import com.alee.laf.WebLookAndFeel;
 import javax.swing.SwingUtilities;
-import untiword.gui.JFWGui;
-import untiword.gui.WordGui;
+import untiword.gui.client.JFWGui;
+import untiword.gui.client.WordGui;
 
 /**
  *
  * @author NThanh
  */
-public class Main {
+public class ClientMain {
 
     public static void main ( final String[] args )
     {
@@ -29,10 +29,9 @@ public class Main {
 
                 // Initializing editor dialog
                 JFWGui gui = new JFWGui();
+                
                 gui.setLocationRelativeTo(null);
                 gui.setVisible(true);
-                
-                //
             }
         } );
     }
