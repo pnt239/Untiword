@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jfateword.main;
+package untiword.main;
 
 import com.alee.laf.WebLookAndFeel;
 import javax.swing.SwingUtilities;
-import jfateword.gui.JFWGui;
-import jfateword.gui.WordGui;
+import untiword.gui.JFWGui;
+import untiword.gui.WordGui;
 
 /**
  *
