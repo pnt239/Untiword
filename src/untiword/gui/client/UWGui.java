@@ -5,18 +5,18 @@
  */
 package untiword.gui.client;
 
-import untiword.components.JFWEditor;
-import untiword.components.JFWRuler;
+import untiword.components.UWEditor;
+import untiword.components.UWRuler;
 
 /**
  *
  * @author NThanh
  */
-public class JFWGui extends javax.swing.JFrame {
+public class UWGui extends javax.swing.JFrame {
     /**
      * Creates new form JFGui
      */
-    public JFWGui() {
+    public UWGui() {
         initComponents();
     }
     
@@ -63,7 +63,7 @@ public class JFWGui extends javax.swing.JFrame {
         jButton10 = new javax.swing.JButton();
         jSeparator24 = new javax.swing.JToolBar.Separator();
         jButton11 = new javax.swing.JButton();
-        jEditorPane = new JFWEditor();
+        jEditorPane = new UWEditor();
         jToolBar2 = new javax.swing.JToolBar();
         jButton12 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -446,7 +446,7 @@ public class JFWGui extends javax.swing.JFrame {
     private javax.swing.JComboBox jComboBox6;
     private javax.swing.JComboBox jComboBox7;
     private javax.swing.JComboBox jComboBox8;
-    private JFWEditor jEditorPane;
+    private UWEditor jEditorPane;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;

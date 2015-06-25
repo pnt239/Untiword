@@ -14,21 +14,21 @@ import javax.swing.ScrollPaneConstants;
  *
  * @author NThanh
  */
-public class JFWEditor extends JScrollPane implements ActionListener{
-    private JFWRuler jRuler;
+public class UWEditor extends JScrollPane implements ActionListener{
+    private UWRuler jRuler;
     
     @Override
     public void actionPerformed(ActionEvent e) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    public JFWEditor() {
-        super(new JFWEditablePane(), ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    public UWEditor() {
+        super(new UWEditablePane(), ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         init();
     }
     
     private void init() {
-        jRuler = new JFWRuler();
+        jRuler = new UWRuler();
         super.setColumnHeaderView(jRuler);
     }
 }

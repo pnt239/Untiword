@@ -24,7 +24,7 @@ import javax.swing.text.ViewFactory;
  *
  * @author NThanh
  */
-public class JFWPageableEditorKit extends StyledEditorKit {
+public class UWPageableEditorKit extends StyledEditorKit {
     
     PageableViewFactory factory = new PageableViewFactory();
     protected int pageWidth = 150;
@@ -33,7 +33,7 @@ public class JFWPageableEditorKit extends StyledEditorKit {
     /**
      * Constructs kit instance
      */
-    public JFWPageableEditorKit() {
+    public UWPageableEditorKit() {
     }
     
     @Override
@@ -222,7 +222,7 @@ public class JFWPageableEditorKit extends StyledEditorKit {
      * @author Pham Ngoc Thanh
      * @version 1.0
      */
-    class PageableParagraphView extends ParagraphView implements JFWMultiPageView {
+    class PageableParagraphView extends ParagraphView implements UWMultiPageView {
 
         public PageableParagraphView(Element elem) {
             super(elem);

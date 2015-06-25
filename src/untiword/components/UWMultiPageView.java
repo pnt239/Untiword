@@ -9,7 +9,7 @@ package untiword.components;
  *
  * @author NThanh
  */
-public interface JFWMultiPageView {
+public interface UWMultiPageView {
     
     /**
      * Perform pageable layout of componet's children views.

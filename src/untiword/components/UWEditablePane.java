@@ -11,11 +11,11 @@ import javax.swing.JEditorPane;
  *
  * @author NThanh
  */
-public class JFWEditablePane extends JEditorPane {
-    private JFWPageableEditorKit jPageableEditorKit;
+public class UWEditablePane extends JEditorPane {
+    private UWPageableEditorKit jPageableEditorKit;
     
-    public JFWEditablePane() {
-        jPageableEditorKit = new JFWPageableEditorKit();
+    public UWEditablePane() {
+        jPageableEditorKit = new UWPageableEditorKit();
         
         super.setEditorKit(jPageableEditorKit);
     }

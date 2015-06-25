@@ -11,6 +11,6 @@ import javax.swing.JPanel;
  *
  * @author NThanh
  */
-public class JFWRuler extends JPanel {
+public class UWRuler extends JPanel {
     //
 }
