@@ -9,6 +9,7 @@ import javax.swing.text.Document;
 
 import View.DocPanel;
 import View.Editor;
+import untiword.gui.client.WordGui;
 
 /**
  * DocumentContentListener is a custom Document listener that waits for updates
@@ -94,7 +95,7 @@ public class DocumentContentListener implements DocumentListener {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
 
-                            DocPanel pan = editor.getDocIDtoDocPanel().get(
+                            WordGui pan = editor.getDocIDtoDocPanel().get(
                                     docNum);
                             pan.getTextPane().setCaretPosition(0);
                             editor.updateView(docNum + "");

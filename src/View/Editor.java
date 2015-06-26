@@ -28,6 +28,8 @@ import javax.swing.event.ChangeListener;
 import Controller.MessageHandlingThread;
 import Model.ServerRequestDQ;
 import Model.UserDQ;
+import untiword.gui.client.UWGui;
+import untiword.gui.client.WordGui;
 
 
 /**
@@ -58,7 +60,7 @@ public class Editor extends JFrame {
     private MessageHandlingThread MHT;
     private int ignoreNext = 0;
     private JTabbedPane tabbedPane;
-    private HashMap<Integer, DocPanel> docIDtoDocPanel;
+    private HashMap<Integer, WordGui> docIDtoDocPanel;
 
 
     /**
@@ -70,7 +72,7 @@ public class Editor extends JFrame {
      */
     public Editor() throws UnknownHostException, IOException {
 
-        docIDtoDocPanel = new HashMap<Integer, DocPanel>();
+        docIDtoDocPanel = new HashMap<Integer, WordGui>();
 
         showGreetingDialog();
 
@@ -190,7 +192,7 @@ public class Editor extends JFrame {
 
             else if (reqType.equals("DOCRENAMED")) {
                 String[] broken = splitString[2].split("~");
-                DocPanel docToRename = docIDtoDocPanel.get(Integer
+                WordGui docToRename = docIDtoDocPanel.get(Integer
                         .parseInt(broken[0]));
                 int index = tabbedPane.indexOfComponent(docToRename);
                 tabbedPane.setTitleAt(index, broken[1]);
@@ -229,16 +231,23 @@ public class Editor extends JFrame {
                 // update userDQ with new doc, send a load message
                 String[] splitDoc = splitString[2].split("~");
                 getUser().addDocument(Integer.parseInt(splitDoc[0]));
-                DocPanel newDocWindow = new DocPanel(
-                        Integer.parseInt(splitDoc[0]), splitDoc[1], this);
-                this.docIDtoDocPanel.put(newDocWindow.getNum(), newDocWindow);
-                tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
-                        newDocWindow);
-                tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
-                        newDocWindow.getName());
-                tabbedPane.add("Open/Create", new NewDocPanel(this));
-                initTabComponent(tabbedPane.getTabCount() - 2);
-                tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 2);
+                
+                WordGui newDocWindow = new WordGui(Integer.parseInt(splitDoc[0])
+                        , splitDoc[1], this);
+                newDocWindow.setLocationRelativeTo(null);
+                newDocWindow.setVisible(true);
+                newDocWindow.setTitle(splitDoc[1]);
+                
+//                DocPanel newDocWindow = new DocPanel(
+//                        Integer.parseInt(splitDoc[0]), splitDoc[1], this);
+               this.docIDtoDocPanel.put(newDocWindow.getNum(), newDocWindow);
+//                tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
+//                        newDocWindow);
+//                tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
+//                        newDocWindow.getName());
+//                tabbedPane.add("Open/Create", new NewDocPanel(this));
+//                initTabComponent(tabbedPane.getTabCount() - 2);
+//                tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 2);
                 this.sendMessage(createControlMessage("load",
                         Integer.parseInt(splitDoc[0]), splitDoc[1]));
 
@@ -264,7 +273,7 @@ public class Editor extends JFrame {
             this.ignoreNext = 2;
 
             int docId = Integer.parseInt(docID);
-            DocPanel panelToUpdate = docIDtoDocPanel.get(docId);
+            WordGui panelToUpdate = docIDtoDocPanel.get(docId);
             JTextPane tempPane = panelToUpdate.getTextPane();
 
             ServerRequestDQ newSelection = null;
@@ -479,7 +488,7 @@ public class Editor extends JFrame {
      * Getter for the hash map from docID to the panel that holds the document
      * @return docIDtoDocPanel
      */
-    public HashMap<Integer, DocPanel> getDocIDtoDocPanel() {
+    public HashMap<Integer, WordGui> getDocIDtoDocPanel() {
         return docIDtoDocPanel;
     }
 
@@ -487,7 +496,7 @@ public class Editor extends JFrame {
      * Setter for the above mentioned hashmap
      * @param docIDtoDocPanel
      */
-    public void setDocIDtoDocPanel(HashMap<Integer, DocPanel> docIDtoDocPanel) {
+    public void setDocIDtoDocPanel(HashMap<Integer, WordGui> docIDtoDocPanel) {
         this.docIDtoDocPanel = docIDtoDocPanel;
     }
 }
