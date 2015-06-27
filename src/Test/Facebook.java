@@ -5,16 +5,24 @@
  */
 package Test;
 
-import java.io.BufferedReader;
+import Controller.AccountController.FacebookController;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import static java.lang.System.out;
 
 /**
  *
  * @author Untitled25364
  */
-public class Facebook {    
-    
+public class Facebook 
+{
+    public static void main(String[] args) throws IOException
+    {
+        FacebookController fc = new FacebookController();
+//        String graph = fc.getFBGraph("");
+//        Map<String, String> fbProfileData = fc.getGraphData(graph);
+//        out.println("<div>Welcome "+fbProfileData.get("first_name"));
+//        out.println("<div>Your Email: "+fbProfileData.get("email"));
+//        out.println("<div>You are "+fbProfileData.get("gender"));		
+        out.print(fc.getLoginDialogUrlString());
+    }
 }

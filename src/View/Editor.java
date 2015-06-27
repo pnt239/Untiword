@@ -28,7 +28,10 @@ import javax.swing.event.ChangeListener;
 import Controller.MessageHandlingThread;
 import Model.ServerRequestDQ;
 import Model.UserDQ;
-import untiword.gui.client.UWGui;
+import com.alee.laf.optionpane.WebOptionPane;
+import com.alee.laf.panel.WebPanel;
+import untiword.gui.client.DocumentGui;
+import untiword.gui.client.EditorListener;
 import untiword.gui.client.WordGui;
 
 
@@ -51,7 +54,7 @@ import untiword.gui.client.WordGui;
  * 
  */
 public class Editor extends JFrame {
-
+    public EditorListener listener;
     private static final long serialVersionUID = 1L;
     private UserDQ user;
     private Socket serverSocket;
@@ -70,11 +73,11 @@ public class Editor extends JFrame {
      * @throws UnknownHostException
      * @throws IOException
      */
-    public Editor() throws UnknownHostException, IOException {
+    public Editor(String server, String port) throws UnknownHostException, IOException {
 
         docIDtoDocPanel = new HashMap<Integer, WordGui>();
 
-        showGreetingDialog();
+        showGreetingDialog(server, port);
 
         out = new PrintWriter(getServerSocket().getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(getServerSocket()
@@ -187,7 +190,8 @@ public class Editor extends JFrame {
             String reqType = splitString[1];
 
             if (reqType.equals("ERROR")) {
-                JOptionPane.showMessageDialog(tabbedPane, splitString[2]);
+                WebOptionPane.showMessageDialog ( null, "SsplitString[2]", "Error", WebOptionPane.ERROR_MESSAGE );
+                //JOptionPane.showMessageDialog(tabbedPane, splitString[2]);                
             }
 
             else if (reqType.equals("DOCRENAMED")) {
@@ -203,9 +207,13 @@ public class Editor extends JFrame {
 
                 // Send new info to new doc panel, send as list loading
                 // label into list
+                DocumentSelectionPanel selectionPanel = new DocumentSelectionPanel();
+                
                 if (splitString.length < 3) {
+                    //Show second without list..... Quang
                     tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
-                            new DocumentSelectionPanel(null, this));
+                            selectionPanel.getDocumentSelectionPanel(null, this));
+                    listener.panelCreated(selectionPanel.getDocumentSelectionPanel(null, this));
                     tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
                             "Open/Create");
                 } else {
@@ -213,10 +221,10 @@ public class Editor extends JFrame {
                     for (int i = 2; i < splitString.length; i++) {
                         docNames[i - 2] = splitString[i];
                     }
-                    DocumentSelectionPanel selectionPanel = new DocumentSelectionPanel(
-                            docNames, this);
+                    //Show second with list
                     tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
-                            selectionPanel);
+                            selectionPanel.getDocumentSelectionPanel(docNames, this));
+                    listener.panelCreated(selectionPanel.getDocumentSelectionPanel(docNames, this));
                     tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
                             "Open/Create");
                     tabbedPane.getComponent(tabbedPane.getTabCount() - 1)
@@ -350,7 +358,7 @@ public class Editor extends JFrame {
             public void run() {
                 try {
                     Editor main;
-                    main = new Editor();
+                    main = new Editor("127.0.0.1", "8000");
                     main.setMinimumSize(new Dimension(800, 500));
                     main.setMaximumSize(new Dimension(800, 500));
                     main.pack();
@@ -413,43 +421,37 @@ public class Editor extends JFrame {
      * port number. Handles user input, and connects to server if input is
      * correct.
      */
-    public void showGreetingDialog() {
-        JTextField xField = new JTextField(5);
-        JTextField yField = new JTextField(5);
-
-        JPanel myPanel = new JPanel();
-        myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
-        myPanel.add(new JLabel("Server Address:"));
-        myPanel.add(xField);
-        myPanel.add(Box.createHorizontalStrut(15)); // a spacer
-        myPanel.add(new JLabel("Port Number:"));
-        myPanel.add(yField);
-
-        int result = JOptionPane.showConfirmDialog(null, myPanel,
-                "Collaborative Editor", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION) {
+    public void showGreetingDialog(String server, String port) {
+//        JTextField xField = new JTextField(5);
+//        JTextField yField = new JTextField(5);
+//
+//        JPanel myPanel = new JPanel();
+//        myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
+//        myPanel.add(new JLabel("Server Address:"));
+//        myPanel.add(xField);
+//        myPanel.add(Box.createHorizontalStrut(15)); // a spacer
+//        myPanel.add(new JLabel("Port Number:"));
+//        myPanel.add(yField);
+//
+//        int result = JOptionPane.showConfirmDialog(null, myPanel,
+//                "Collaborative Editor", JOptionPane.OK_CANCEL_OPTION);
+//        if (result == JOptionPane.OK_OPTION) {
             try {
-                setServerSocket(new Socket(xField.getText(),
-                        Integer.parseInt(yField.getText())));
+                setServerSocket(new Socket(server,
+                        Integer.parseInt(port)));
             } catch (NumberFormatException e) {
-                JOptionPane
+                WebOptionPane
                         .showMessageDialog(null,
                                 "Connection failed. Please double check your server address and port number.");
-                System.exit(0);
             } catch (UnknownHostException e) {
-                JOptionPane
+                WebOptionPane
                         .showMessageDialog(null,
                                 "Connection failed. Please double check your server address and port number.");
-                System.exit(0);
             } catch (IOException e) {
-                JOptionPane
+                WebOptionPane
                         .showMessageDialog(null,
                                 "Connection failed. Please double check your server address and port number.");
-                System.exit(0);
-            }
-        } else {
-            System.exit(0);
-        }
+            }        
     }
 
     /**
