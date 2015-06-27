@@ -70,11 +70,11 @@ public class Editor extends JFrame {
      * @throws UnknownHostException
      * @throws IOException
      */
-    public Editor() throws UnknownHostException, IOException {
+    public Editor(String server, String port) throws UnknownHostException, IOException {
 
         docIDtoDocPanel = new HashMap<Integer, WordGui>();
 
-        showGreetingDialog();
+        showGreetingDialog(server, port);
 
         out = new PrintWriter(getServerSocket().getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(getServerSocket()
@@ -350,7 +350,7 @@ public class Editor extends JFrame {
             public void run() {
                 try {
                     Editor main;
-                    main = new Editor();
+                    main = new Editor("", "");
                     main.setMinimumSize(new Dimension(800, 500));
                     main.setMaximumSize(new Dimension(800, 500));
                     main.pack();
@@ -413,24 +413,24 @@ public class Editor extends JFrame {
      * port number. Handles user input, and connects to server if input is
      * correct.
      */
-    public void showGreetingDialog() {
-        JTextField xField = new JTextField(5);
-        JTextField yField = new JTextField(5);
-
-        JPanel myPanel = new JPanel();
-        myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
-        myPanel.add(new JLabel("Server Address:"));
-        myPanel.add(xField);
-        myPanel.add(Box.createHorizontalStrut(15)); // a spacer
-        myPanel.add(new JLabel("Port Number:"));
-        myPanel.add(yField);
-
-        int result = JOptionPane.showConfirmDialog(null, myPanel,
-                "Collaborative Editor", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION) {
+    public void showGreetingDialog(String server, String port) {
+//        JTextField xField = new JTextField(5);
+//        JTextField yField = new JTextField(5);
+//
+//        JPanel myPanel = new JPanel();
+//        myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
+//        myPanel.add(new JLabel("Server Address:"));
+//        myPanel.add(xField);
+//        myPanel.add(Box.createHorizontalStrut(15)); // a spacer
+//        myPanel.add(new JLabel("Port Number:"));
+//        myPanel.add(yField);
+//
+//        int result = JOptionPane.showConfirmDialog(null, myPanel,
+//                "Collaborative Editor", JOptionPane.OK_CANCEL_OPTION);
+//        if (result == JOptionPane.OK_OPTION) {
             try {
-                setServerSocket(new Socket(xField.getText(),
-                        Integer.parseInt(yField.getText())));
+                setServerSocket(new Socket(server,
+                        Integer.parseInt(port)));
             } catch (NumberFormatException e) {
                 JOptionPane
                         .showMessageDialog(null,
@@ -446,10 +446,7 @@ public class Editor extends JFrame {
                         .showMessageDialog(null,
                                 "Connection failed. Please double check your server address and port number.");
                 System.exit(0);
-            }
-        } else {
-            System.exit(0);
-        }
+            }        
     }
 
     /**
