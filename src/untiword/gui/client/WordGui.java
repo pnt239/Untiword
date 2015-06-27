@@ -5,17 +5,40 @@
  */
 package untiword.gui.client;
 
+import Controller.DocumentContentListener;
+import View.Editor;
+import javax.swing.JTextPane;
+import javax.swing.event.DocumentListener;
+
 /**
  *
  * @author NThanh
  */
 public class WordGui extends javax.swing.JFrame {
 
+    private static final long serialVersionUID = 1L;
+    private final int docNum;
+    private String docName;
+    private DocumentListener listener;
+    
     /**
      * Creates new form WordGui
      */
-    public WordGui() {
+    public int getNum(){
+        return docNum;
+    }
+    
+    public WordGui(final int docNum, String docName, final Editor editor) {
+        this.docNum = docNum;
+        this.docName = docName;
+        listener = new DocumentContentListener(docNum, editor);
+        
         initComponents();
+        
+        jTextPane1.getDocument().addDocumentListener(listener);
+    }
+    public JTextPane getTextPane(){
+        return jTextPane1;
     }
 
     /**
@@ -62,7 +85,7 @@ public class WordGui extends javax.swing.JFrame {
         jSeparator24 = new javax.swing.JToolBar.Separator();
         jButton11 = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jEditorPane1 = new javax.swing.JEditorPane();
+        jTextPane1 = new javax.swing.JTextPane();
         jToolBar2 = new javax.swing.JToolBar();
         jButton12 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -256,8 +279,7 @@ public class WordGui extends javax.swing.JFrame {
 
         getContentPane().add(jToolBar1, java.awt.BorderLayout.NORTH);
 
-        jEditorPane1.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        jScrollPane1.setViewportView(jEditorPane1);
+        jScrollPane1.setViewportView(jTextPane1);
 
         getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
@@ -446,7 +468,6 @@ public class WordGui extends javax.swing.JFrame {
     private javax.swing.JComboBox jComboBox6;
     private javax.swing.JComboBox jComboBox7;
     private javax.swing.JComboBox jComboBox8;
-    private javax.swing.JEditorPane jEditorPane1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
@@ -514,6 +535,7 @@ public class WordGui extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator7;
     private javax.swing.JPopupMenu.Separator jSeparator8;
     private javax.swing.JPopupMenu.Separator jSeparator9;
+    private javax.swing.JTextPane jTextPane1;
     private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JToggleButton jToggleButton2;
     private javax.swing.JToggleButton jToggleButton3;

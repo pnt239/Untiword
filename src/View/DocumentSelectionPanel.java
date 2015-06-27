@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import untiword.gui.client.WordGui;
 
 /**
  * 
@@ -251,14 +252,17 @@ public class DocumentSelectionPanel extends JPanel {
         }
 
         editor.getUser().addDocument(num);
-        DocPanel newDoc = new DocPanel(num, name, editor);
-        editor.getTabbedPane().add(name, newDoc);
+        WordGui newDoc = new WordGui(num, name, editor);
+        newDoc.setLocationRelativeTo(null);
+        newDoc.setTitle(name);
+        newDoc.setVisible(true);
+//        editor.getTabbedPane().add(name, newDoc);
         editor.getDocIDtoDocPanel().put(num, newDoc);
         editor.sendMessage(editor.createControlMessage("load", num, name));
-        editor.getTabbedPane().remove(editor.getTabbedPane().getTabCount() - 2);
-        editor.getTabbedPane().add("+", new NewDocPanel(editor));
-        editor.initTabComponent(editor.getTabbedPane().getTabCount() - 2);
-        editor.getTabbedPane().setSelectedIndex(editor.getTabbedPane().getTabCount() - 2);
+//        editor.getTabbedPane().remove(editor.getTabbedPane().getTabCount() - 2);
+//        editor.getTabbedPane().add("+", new NewDocPanel(editor));
+//        editor.initTabComponent(editor.getTabbedPane().getTabCount() - 2);
+//        editor.getTabbedPane().setSelectedIndex(editor.getTabbedPane().getTabCount() - 2);
     }
 
     /**
