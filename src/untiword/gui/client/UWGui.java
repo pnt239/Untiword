@@ -5,13 +5,23 @@
  */
 package untiword.gui.client;
 
+import Controller.AccountController.AccountController;
 import Controller.MessageHandlingThread;
+import Model.Account.FacebookUser;
 import Model.ServerRequestDQ;
 import Model.UserDQ;
+import View.Account.FBLoginJFrame;
+import View.Account.FBLoginJFrameEventListener;
 import View.ButtonTabComponent;
 import View.DocumentSelectionPanel;
 import View.Editor;
 import View.NewDocPanel;
+import chrriis.dj.nativeswing.swtimpl.components.WebBrowserCommandEvent;
+import chrriis.dj.nativeswing.swtimpl.components.WebBrowserEvent;
+import chrriis.dj.nativeswing.swtimpl.components.WebBrowserListener;
+import chrriis.dj.nativeswing.swtimpl.components.WebBrowserNavigationEvent;
+import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowOpeningEvent;
+import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowWillOpenEvent;
 import com.alee.extended.breadcrumb.WebBreadcrumb;
 import com.alee.extended.breadcrumb.WebBreadcrumbToggleButton;
 import com.alee.extended.panel.GroupPanel;
@@ -38,6 +48,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import static java.lang.System.out;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -65,6 +77,8 @@ import javax.swing.event.ChangeListener;
  */
 public class UWGui {
 
+    private static FacebookUser _fBUser;
+    private static AccountController _accountController;
     private static boolean isLogin = false;
     private static boolean isConnect = false;
     private static JPanel bottomPanel;
@@ -153,6 +167,42 @@ public class UWGui {
             }
         }
     };
+    
+    private static void setFBLoginJFrameEventListener(FBLoginJFrame fBLoginJFrame, WebButton loginFBbtn)
+    {
+        if(fBLoginJFrame != null)
+        {
+            try
+            {
+                FBLoginJFrameEventListener fBLoginJFrameEventListener = new FBLoginJFrameEventListener() {
+
+                    @Override
+                    public void loginSuccess() 
+                    {
+                        if(fBLoginJFrame.getLoginSuccess())
+                        {
+                            if(loginFBbtn != null)
+                            {
+                                _fBUser = fBLoginJFrame.getUser();
+                                if(_fBUser != null)
+                                {
+                                    fBLoginJFrame.close();
+                                    //out.print(_fBUser.getName() + "\n");
+                                    loginFBbtn.setText("Log in as " + _fBUser.getName());
+                                    isLogin = true;
+                                }                             
+                            }                           
+                        }
+                    }
+                };
+                fBLoginJFrame.setFBLoginJFrameEventListener(fBLoginJFrameEventListener);
+            }
+            catch(Exception e)
+            {
+                
+            }
+        }
+    }
 
     private static WebPanel createConnectForm() {
         WebPanel panel = new WebPanel();
@@ -180,8 +230,15 @@ public class UWGui {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                throw new UnsupportedOperationException("Not supported yet.");
                 //Hào viết login facebook ở đây.
+                FBLoginJFrame fBLoginJFrame;
+                try {
+                    fBLoginJFrame = new FBLoginJFrame();
+                    fBLoginJFrame.setVisible(true);                  
+                    setFBLoginJFrameEventListener(fBLoginJFrame, loginFBbtn);                                     
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(UWGui.class.getName()).log(Level.SEVERE, null, ex);
+                }             
             }
         });
 
