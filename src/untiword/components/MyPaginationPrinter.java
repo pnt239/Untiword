@@ -39,6 +39,7 @@ public class MyPaginationPrinter implements Printable, Pageable {
         }
     }
 
+    @Override
     public int print(Graphics g, PageFormat pageFormat, int pageIndex) throws PrinterException {
         Graphics2D g2d = (Graphics2D) g;
         if (isPaginated) {

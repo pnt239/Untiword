@@ -8,8 +8,11 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 
 import Model.ServerRequestDQ;
+import Model.WordModel;
 import Server.SEditDocument;
 import Server.SEditThread;
+import java.io.PrintStream;
+import javax.swing.JTextArea;
 import untiword.gui.server.UWServerGui;
 
 /**
@@ -75,10 +78,17 @@ public class SEditServer {
         
         serverGui.setLocationRelativeTo(null);
         serverGui.setVisible(true);
-        serverGui.getText().append("Server created on port " + port + "\n");
+        serverGui.setTitle("Server Log!"); 
+        
+        System.setOut(new PrintStream(System.out) {
+        public void println(String s) {
+          serverGui.getText().append(s + "\n");
+            }
+            // override some other methods?
+          });
         this.die = false;
         
-        System.out.println("Server created on port " + port);
+        System.out.println("Server created on port " + port);        
     }
     
     /**
@@ -124,11 +134,11 @@ public class SEditServer {
                         suggestedName += ("-" + newDocumentID);
                     }
                 }
-
+                
                 SEditDocument newDocument = new SEditDocument(newDocumentID,
                         suggestedName);
-                documents.put(newDocumentID, newDocument);
-
+                documents.put(newDocumentID, newDocument);                
+                
                 String message = "CONTROL|REQNEWPROCESSED";
                 message += ("|" + newDocument.getDocumentID() + "~" + newDocument
                         .getDocumentName());
@@ -191,17 +201,14 @@ public class SEditServer {
     private synchronized void distributeMessage(String message) {
         System.out.println("Server distributing message to connected clients: "
                 + message);
-        serverGui.getText().append("Server distributing message to connected clients: "
-                + message + "\n");
+
 
         for (SEditThread user : users.values()) {
             user.sendMessage(message);
         }
     }
     
-    public void appendTextArea(String text){
-        serverGui.getText().append(text);
-    }
+
 
     /**
      * Generates a DOCLIST message to be sent to the users
@@ -263,7 +270,7 @@ public class SEditServer {
                     if (die == true) {
                         // System.out.println("Server in process of shutting down");
                     } else {
-                        System.out.println("Problem connecting to new user!");
+                        System.out.println("Problem connecting to new user!");                     
                     }
                 }
             }
@@ -280,6 +287,7 @@ public class SEditServer {
     public synchronized void kill() {
         System.out.println("Killing the server!");
 
+
         this.die = true;
 
         try {
@@ -288,6 +296,7 @@ public class SEditServer {
             serverSocket.close();
         } catch (IOException e) {
             System.out.println("Could not close socket!");
+
         }
 
         System.exit(0);

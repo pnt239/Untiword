@@ -14,16 +14,16 @@ import javax.swing.JEditorPane;
  * @author NThanh
  */
 public class UWEditablePane extends JEditorPane {
-    private UWPageableEditorKit jPageableEditorKit;
+    private MyPageableEditorKit jPageableEditorKit;
     
     public UWEditablePane() {
-        jPageableEditorKit = new UWPageableEditorKit();
-        //jPageableEditorKit.setHeader(jPageableEditorKit.createHeader());
-        //jPageableEditorKit.setFooter(jPageableEditorKit.createFooter());
+        jPageableEditorKit = new MyPageableEditorKit();
+        jPageableEditorKit.setHeader(jPageableEditorKit.createHeader());
+        jPageableEditorKit.setFooter(jPageableEditorKit.createFooter());
         super.setEditorKit(jPageableEditorKit);
         
         PageFormat pf = new PageFormat();
         pf.setPaper(new Paper());
-        final UWPaginationPrinter pp = new UWPaginationPrinter(pf, this);
+        final MyPaginationPrinter pp = new MyPaginationPrinter(pf, this);
     }
 }

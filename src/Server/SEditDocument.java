@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import Model.ServerRequestDQ;
+import Model.WordModel;
 
 /**
  * SEditDocument represents the server version of a document. It is recognized
@@ -18,6 +19,7 @@ public class SEditDocument {
     private final int documentID;
     private String documentName;
     private final List<ServerRequestDQ> serverHistory;
+    
 
     private final List<SEditThread> subscribedUsers;
 
@@ -28,7 +30,7 @@ public class SEditDocument {
      */
     public SEditDocument(int documentID, String documentName) {
         this.documentID = documentID;
-        this.documentName = documentName;
+        this.documentName = documentName;        
 
         this.serverHistory = new ArrayList<ServerRequestDQ>();
         serverHistory.add(new ServerRequestDQ("|0|0|INSERT|0|0||0")); // empty
