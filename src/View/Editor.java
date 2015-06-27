@@ -28,7 +28,7 @@ import javax.swing.event.ChangeListener;
 import Controller.MessageHandlingThread;
 import Model.ServerRequestDQ;
 import Model.UserDQ;
-import untiword.gui.client.UWGui;
+import untiword.gui.client.DocumentGui;
 import untiword.gui.client.WordGui;
 
 

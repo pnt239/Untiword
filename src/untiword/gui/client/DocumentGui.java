@@ -12,11 +12,11 @@ import untiword.components.UWRuler;
  *
  * @author NThanh
  */
-public class UWGui extends javax.swing.JFrame {
+public class DocumentGui extends javax.swing.JFrame {
     /**
      * Creates new form JFGui
      */
-    public UWGui() {
+    public DocumentGui() {
         initComponents();
     }
     
