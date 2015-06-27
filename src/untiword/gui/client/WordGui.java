@@ -256,6 +256,7 @@ public class WordGui extends javax.swing.JFrame {
 
         getContentPane().add(jToolBar1, java.awt.BorderLayout.NORTH);
 
+        jEditorPane1.setMargin(new java.awt.Insets(0, 0, 0, 0));
         jScrollPane1.setViewportView(jEditorPane1);
 
         getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
