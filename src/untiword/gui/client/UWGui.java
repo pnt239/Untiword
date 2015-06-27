@@ -82,7 +82,7 @@ public class UWGui {
     private static boolean isLogin = false;
     private static boolean isConnect = false;
     private static JPanel bottomPanel;
-
+    private static Editor mainEditor;
     private static JPanel mainPanel;
 
     public UWGui() {
@@ -145,6 +145,7 @@ public class UWGui {
         public void actionPerformed(ActionEvent e) {
             if (!isConnect) {
                 first.setSelected(true);
+                setupGui();
             }
         }
     };
@@ -188,7 +189,7 @@ public class UWGui {
                                 {
                                     fBLoginJFrame.close();
                                     loginFBbtn.setText("Log in as " + _fBUser.getName());
-                                    isLogin = true;
+                                    isLogin = true;                                    
                                 }                             
                             }                           
                         }
@@ -251,7 +252,7 @@ public class UWGui {
                     try {
                         String Server = ServerAddr.getText();
                         String Po = Port.getText();
-                        Editor mainEditor = new Editor(Server, Po);
+                        mainEditor = new Editor(Server, Po);
                         
                     } catch (IOException ex) {
                         Logger.getLogger(UWGui.class.getName()).log(Level.SEVERE, null, ex);

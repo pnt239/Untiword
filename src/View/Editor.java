@@ -28,6 +28,8 @@ import javax.swing.event.ChangeListener;
 import Controller.MessageHandlingThread;
 import Model.ServerRequestDQ;
 import Model.UserDQ;
+import com.alee.laf.optionpane.WebOptionPane;
+import com.alee.laf.panel.WebPanel;
 import untiword.gui.client.DocumentGui;
 import untiword.gui.client.WordGui;
 
@@ -187,7 +189,8 @@ public class Editor extends JFrame {
             String reqType = splitString[1];
 
             if (reqType.equals("ERROR")) {
-                JOptionPane.showMessageDialog(tabbedPane, splitString[2]);
+                WebOptionPane.showMessageDialog ( null, "SsplitString[2]", "Error", WebOptionPane.ERROR_MESSAGE );
+                //JOptionPane.showMessageDialog(tabbedPane, splitString[2]);                
             }
 
             else if (reqType.equals("DOCRENAMED")) {
@@ -203,9 +206,12 @@ public class Editor extends JFrame {
 
                 // Send new info to new doc panel, send as list loading
                 // label into list
+                DocumentSelectionPanel selectionPanel = new DocumentSelectionPanel();
+                
                 if (splitString.length < 3) {
+                    //Show second without list..... Quang
                     tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
-                            new DocumentSelectionPanel(null, this));
+                            selectionPanel.getDocumentSelectionPanel(null, this));
                     tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
                             "Open/Create");
                 } else {
@@ -213,10 +219,9 @@ public class Editor extends JFrame {
                     for (int i = 2; i < splitString.length; i++) {
                         docNames[i - 2] = splitString[i];
                     }
-                    DocumentSelectionPanel selectionPanel = new DocumentSelectionPanel(
-                            docNames, this);
+                    //Show second with list
                     tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
-                            selectionPanel);
+                            selectionPanel.getDocumentSelectionPanel(docNames, this));
                     tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
                             "Open/Create");
                     tabbedPane.getComponent(tabbedPane.getTabCount() - 1)
@@ -350,7 +355,7 @@ public class Editor extends JFrame {
             public void run() {
                 try {
                     Editor main;
-                    main = new Editor("", "");
+                    main = new Editor("127.0.0.1", "8000");
                     main.setMinimumSize(new Dimension(800, 500));
                     main.setMaximumSize(new Dimension(800, 500));
                     main.pack();
