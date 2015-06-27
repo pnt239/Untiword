@@ -89,17 +89,22 @@ public class UWGui {
     private static JFrame jFrame;
     private static String Server;
     private static String Po;
+    private static WebBreadcrumb breadcrumb1;
+    
     public UWGui() {
+        first.setSelected(true);
         setupGui(createConnectForm());
     }
 
     private static void setupGui(WebPanel content) {
         if(jFrame == null){
             jFrame = new JFrame();
+            breadcrumb1 = new WebBreadcrumb(true);
+            fillBreadcrumb(breadcrumb1);
         }
         jFrame.getContentPane().removeAll();
-        WebBreadcrumb breadcrumb1 = new WebBreadcrumb(true);
-        fillBreadcrumb(breadcrumb1);
+        jFrame.getContentPane().invalidate();
+
         GroupPanel steps = new GroupPanel(3, false, breadcrumb1);
 
         bottomPanel = new JPanel(new BorderLayout());
@@ -111,8 +116,8 @@ public class UWGui {
         mainPanel.add(contentPanel);
         mainPanel.add(bottomPanel, BorderLayout.PAGE_END);
         
-        jFrame.add(mainPanel);
-
+        jFrame.getContentPane().add(mainPanel);
+        jFrame.getContentPane().revalidate();
         jFrame.setSize(800, 600);
         jFrame.setLocationRelativeTo(null);
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -142,9 +147,9 @@ public class UWGui {
         SwingUtils.groupButtons(b);
     }
 
-    static WebBreadcrumbToggleButton first = new WebBreadcrumbToggleButton("Connect to Server");   
-    static WebBreadcrumbToggleButton second = new WebBreadcrumbToggleButton("Select Document");
-    static WebBreadcrumbToggleButton third = new WebBreadcrumbToggleButton("Edit");
+    final static WebBreadcrumbToggleButton first = new WebBreadcrumbToggleButton("Connect to Server");   
+    final static WebBreadcrumbToggleButton second = new WebBreadcrumbToggleButton("Select Document");
+    final static WebBreadcrumbToggleButton third = new WebBreadcrumbToggleButton("Edit");
 
     private static ActionListener firstActionListener = new ActionListener() {
         @Override
@@ -159,9 +164,9 @@ public class UWGui {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (isConnect) {
-                second.setSelected(isConnect);
-                setupGui(contentPanel);
+            if (isConnect) {     
+                mainEditor.sendMessage(mainEditor.createControlMessage("getdoclist", 0, ""));
+                System.out.println(e.getActionCommand());
             }
         }
     };
@@ -238,7 +243,7 @@ public class UWGui {
             Port.setText(Po);
             ServerAddr.setEditable(false);
             Port.setEditable(false);
-            loginFBbtn.setText("Login as" + _fBUser);
+            loginFBbtn.setText("Login as" + _fBUser.getName());
             
         }    
         loginFBbtn.setMoveIconOnPress(false);
@@ -273,12 +278,12 @@ public class UWGui {
                         mainEditor.listener = new EditorListener() {
 
                             @Override
-                            public void panelCreated(WebPanel input) {
-                                contentPanel = input;
+                            public void panelCreated(WebPanel input) {                               
+                                second.setSelected(true);
+                                setupGui(input);
                             }
                         };
-                        isConnect = true;
-                        secondActionListener.actionPerformed(null);
+                        isConnect = true;                        
                     } catch (IOException ex) {
                         Logger.getLogger(UWGui.class.getName()).log(Level.SEVERE, null, ex);
                     }

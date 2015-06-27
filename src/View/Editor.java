@@ -108,18 +108,6 @@ public class Editor extends JFrame {
 
         tabbedPane.add("Open/Create", new NewDocPanel(this));
 
-        tabbedPane.addChangeListener(new ChangeListener() {
-            /**
-             * If the new selected tab is the last tab (ie the new doc pane)
-             * then refresh the doc list.
-             */
-            public void stateChanged(ChangeEvent e) {
-
-                if (tabbedPane.getSelectedIndex() == tabbedPane.getTabCount() - 1) {
-                    sendMessage(createControlMessage("getdoclist", 0, ""));
-                }
-            }
-        });
 
         GroupLayout layout = new GroupLayout(getContentPane());
         setLayout(layout);
@@ -211,24 +199,15 @@ public class Editor extends JFrame {
                 
                 if (splitString.length < 3) {
                     //Show second without list..... Quang
-                    tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
-                            selectionPanel.getDocumentSelectionPanel(null, this));
                     listener.panelCreated(selectionPanel.getDocumentSelectionPanel(null, this));
-                    tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
-                            "Open/Create");
+
                 } else {
                     String[] docNames = new String[splitString.length - 2];
                     for (int i = 2; i < splitString.length; i++) {
                         docNames[i - 2] = splitString[i];
                     }
                     //Show second with list
-                    tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
-                            selectionPanel.getDocumentSelectionPanel(docNames, this));
                     listener.panelCreated(selectionPanel.getDocumentSelectionPanel(docNames, this));
-                    tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
-                            "Open/Create");
-                    tabbedPane.getComponent(tabbedPane.getTabCount() - 1)
-                            .repaint();
                 }
 
             }
