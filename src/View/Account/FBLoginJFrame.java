@@ -38,6 +38,7 @@ public class FBLoginJFrame extends javax.swing.JFrame {
     
     public void close()
     {
+        _browser.dispose();
         this.setVisible(false);
         this.dispose();
     }
@@ -95,7 +96,6 @@ public class FBLoginJFrame extends javax.swing.JFrame {
         if(_browser != null)
         {
             WebBrowserListener webBrowserListener = new WebBrowserListener() {
-                private int _locationChanged = 0;
                 
                 @Override
                 public void windowWillOpen(WebBrowserWindowWillOpenEvent wbwwoe) {                   
@@ -115,13 +115,13 @@ public class FBLoginJFrame extends javax.swing.JFrame {
 
                 @Override
                 public void locationChanged(WebBrowserNavigationEvent wbne) {
-                    _locationChanged++;
-                    if(_locationChanged == 2)
+                    if(_browser.getResourceLocation().indexOf("http://localhost") == 0)
                     {
+                        setVisible(false);
                         _loginSuccess = true;
                         if(_fbBLoginJFrameEventListener != null)
-                        {
-                            _fbBLoginJFrameEventListener.loginSuccess();
+                        {                        
+                            _fbBLoginJFrameEventListener.loginSuccess();                          
                         }
                     }
                 }
@@ -232,7 +232,7 @@ public class FBLoginJFrame extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
-            try {
+            try {              
                 new FBLoginJFrame().setVisible(true);
             } catch (MalformedURLException ex) {
                 Logger.getLogger(FBLoginJFrame.class.getName()).log(Level.SEVERE, null, ex);

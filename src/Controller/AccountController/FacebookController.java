@@ -243,7 +243,7 @@ public class FacebookController
         try
         {
             FacebookClient fc = new DefaultFacebookClient(user.getAccessToken());
-            result = fc.fetchConnection("me/friends", User.class).getData();         
+            result = fc.fetchConnection("me/friends", User.class).getData();        
         }
         catch(Exception e)
         {

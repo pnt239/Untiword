@@ -187,7 +187,6 @@ public class UWGui {
                                 if(_fBUser != null)
                                 {
                                     fBLoginJFrame.close();
-                                    //out.print(_fBUser.getName() + "\n");
                                     loginFBbtn.setText("Log in as " + _fBUser.getName());
                                     isLogin = true;
                                 }                             
@@ -234,6 +233,7 @@ public class UWGui {
                 FBLoginJFrame fBLoginJFrame;
                 try {
                     fBLoginJFrame = new FBLoginJFrame();
+                    fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     fBLoginJFrame.setVisible(true);                  
                     setFBLoginJFrameEventListener(fBLoginJFrame, loginFBbtn);                                     
                 } catch (MalformedURLException ex) {
