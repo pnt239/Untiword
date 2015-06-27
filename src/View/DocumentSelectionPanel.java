@@ -138,6 +138,7 @@ public class DocumentSelectionPanel {
             docsList = new WebList(blank);
         }
         docsList.setVisibleRowCount(10);
+        docsList.setEditable(false);
         docsList.setSelectedIndex(0);
         docsList.setEditable(true);
         docsList.setMinimumSize(new Dimension(0, 200));
