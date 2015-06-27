@@ -19,6 +19,7 @@ public class SEditDocument {
     private final int documentID;
     private String documentName;
     private final List<ServerRequestDQ> serverHistory;
+    
 
     private final List<SEditThread> subscribedUsers;
 
