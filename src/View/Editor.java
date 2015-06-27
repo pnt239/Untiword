@@ -31,6 +31,7 @@ import Model.UserDQ;
 import com.alee.laf.optionpane.WebOptionPane;
 import com.alee.laf.panel.WebPanel;
 import untiword.gui.client.DocumentGui;
+import untiword.gui.client.EditorListener;
 import untiword.gui.client.WordGui;
 
 
@@ -53,7 +54,7 @@ import untiword.gui.client.WordGui;
  * 
  */
 public class Editor extends JFrame {
-
+    public EditorListener listener;
     private static final long serialVersionUID = 1L;
     private UserDQ user;
     private Socket serverSocket;
@@ -212,6 +213,7 @@ public class Editor extends JFrame {
                     //Show second without list..... Quang
                     tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
                             selectionPanel.getDocumentSelectionPanel(null, this));
+                    listener.panelCreated(selectionPanel.getDocumentSelectionPanel(null, this));
                     tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
                             "Open/Create");
                 } else {
@@ -222,6 +224,7 @@ public class Editor extends JFrame {
                     //Show second with list
                     tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
                             selectionPanel.getDocumentSelectionPanel(docNames, this));
+                    listener.panelCreated(selectionPanel.getDocumentSelectionPanel(docNames, this));
                     tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
                             "Open/Create");
                     tabbedPane.getComponent(tabbedPane.getTabCount() - 1)
@@ -437,20 +440,17 @@ public class Editor extends JFrame {
                 setServerSocket(new Socket(server,
                         Integer.parseInt(port)));
             } catch (NumberFormatException e) {
-                JOptionPane
+                WebOptionPane
                         .showMessageDialog(null,
                                 "Connection failed. Please double check your server address and port number.");
-                System.exit(0);
             } catch (UnknownHostException e) {
-                JOptionPane
+                WebOptionPane
                         .showMessageDialog(null,
                                 "Connection failed. Please double check your server address and port number.");
-                System.exit(0);
             } catch (IOException e) {
-                JOptionPane
+                WebOptionPane
                         .showMessageDialog(null,
                                 "Connection failed. Please double check your server address and port number.");
-                System.exit(0);
             }        
     }
 

@@ -38,6 +38,7 @@ import java.awt.Dimension;
 import java.awt.Event;
 import java.awt.Font;
 import java.awt.Insets;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -76,7 +77,7 @@ import javax.swing.event.ChangeListener;
  * @author Untitled25364
  */
 public class UWGui {
-
+    
     private static FacebookUser _fBUser;
     private static AccountController _accountController;
     private static boolean isLogin = false;
@@ -84,13 +85,19 @@ public class UWGui {
     private static JPanel bottomPanel;
     private static Editor mainEditor;
     private static JPanel mainPanel;
-
+    private static WebPanel contentPanel;
+    private static JFrame jFrame;
+    private static String Server;
+    private static String Po;
     public UWGui() {
-        setupGui();
+        setupGui(createConnectForm());
     }
 
-    private static void setupGui() {
-        JFrame jFrame = new JFrame();
+    private static void setupGui(WebPanel content) {
+        if(jFrame == null){
+            jFrame = new JFrame();
+        }
+        jFrame.getContentPane().removeAll();
         WebBreadcrumb breadcrumb1 = new WebBreadcrumb(true);
         fillBreadcrumb(breadcrumb1);
         GroupPanel steps = new GroupPanel(3, false, breadcrumb1);
@@ -98,12 +105,12 @@ public class UWGui {
         bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(steps, BorderLayout.LINE_START);
 
-        WebPanel contentPanel = createConnectForm();
+        contentPanel = content;
 
         mainPanel = new JPanel(new BorderLayout());
         mainPanel.add(contentPanel);
         mainPanel.add(bottomPanel, BorderLayout.PAGE_END);
-
+        
         jFrame.add(mainPanel);
 
         jFrame.setSize(800, 600);
@@ -123,9 +130,8 @@ public class UWGui {
 
     }
 
-    private static void fillBreadcrumb(WebBreadcrumb b) {
-        
-    first.setSelected (true);
+    private static void fillBreadcrumb(WebBreadcrumb b) {        
+    
         first.addActionListener (firstActionListener);
         second.addActionListener(secondActionListener);
         third.addActionListener(thirdActionListener);
@@ -143,9 +149,9 @@ public class UWGui {
     private static ActionListener firstActionListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (!isConnect) {
+            if (isConnect) {
                 first.setSelected(true);
-                setupGui();
+                setupGui(createConnectForm());
             }
         }
     };
@@ -155,7 +161,7 @@ public class UWGui {
         public void actionPerformed(ActionEvent e) {
             if (isConnect) {
                 second.setSelected(isConnect);
-                
+                setupGui(contentPanel);
             }
         }
     };
@@ -211,35 +217,46 @@ public class UWGui {
         panel.setMargin(210);
         panel.setRound(StyleConstants.largeRound);
 
+
         final WebTextField ServerAddr = new WebTextField(15);
         ServerAddr.setMaximumSize(new Dimension(200, 200));
         ServerAddr.setInputPrompt("Server Address:");
         ServerAddr.setHideInputPromptOnFocus(false);
         ServerAddr.setInputPromptFont(ServerAddr.getFont().deriveFont(Font.ITALIC));
-
-        // Password field input prompt
+        
+        
         final WebTextField Port = new WebTextField(15);
         Port.setInputPrompt("Port:");
         Port.setHideInputPromptOnFocus(false);
         Port.setMaximumSize(new Dimension(200, 200));
         WebLabel label = new WebLabel("Connect to Server");
 
+
         WebButton loginFBbtn = new WebButton("Login with Facebook");
+        if(isConnect){
+            ServerAddr.setText(Server);
+            Port.setText(Po);
+            ServerAddr.setEditable(false);
+            Port.setEditable(false);
+            loginFBbtn.setText("Login as" + _fBUser);
+            
+        }    
         loginFBbtn.setMoveIconOnPress(false);
         loginFBbtn.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                //Hào viết login facebook ở đây.
-                FBLoginJFrame fBLoginJFrame;
-                try {
-                    fBLoginJFrame = new FBLoginJFrame();
-                    fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                    fBLoginJFrame.setVisible(true);                  
-                    setFBLoginJFrameEventListener(fBLoginJFrame, loginFBbtn);                                     
-                } catch (MalformedURLException ex) {
-                    Logger.getLogger(UWGui.class.getName()).log(Level.SEVERE, null, ex);
-                }             
+                if (!isLogin) {
+                    FBLoginJFrame fBLoginJFrame;
+                    try {
+                        fBLoginJFrame = new FBLoginJFrame();
+                        fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                        fBLoginJFrame.setVisible(true);
+                        setFBLoginJFrameEventListener(fBLoginJFrame, loginFBbtn);
+                    } catch (MalformedURLException ex) {
+                        Logger.getLogger(UWGui.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }         
             }
         });
 
@@ -248,12 +265,20 @@ public class UWGui {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (isLogin) {
+                if (isLogin && !isConnect) {
                     try {
-                        String Server = ServerAddr.getText();
-                        String Po = Port.getText();
+                        Server = ServerAddr.getText();
+                        Po = Port.getText();
                         mainEditor = new Editor(Server, Po);
-                        
+                        mainEditor.listener = new EditorListener() {
+
+                            @Override
+                            public void panelCreated(WebPanel input) {
+                                contentPanel = input;
+                            }
+                        };
+                        isConnect = true;
+                        secondActionListener.actionPerformed(null);
                     } catch (IOException ex) {
                         Logger.getLogger(UWGui.class.getName()).log(Level.SEVERE, null, ex);
                     }
