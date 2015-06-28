@@ -5,6 +5,11 @@
  */
 package untiword.gui.client;
 
+import Controller.AccountController.AccountController;
+import Model.Account.FacebookUser;
+import View.Account.FBLoginJFrame;
+import View.Account.FBLoginJFrameEventListener;
+import View.Editor;
 import com.alee.extended.breadcrumb.WebBreadcrumb;
 import com.alee.extended.breadcrumb.WebBreadcrumbButton;
 import com.alee.extended.breadcrumb.WebBreadcrumbToggleButton;
@@ -40,9 +45,14 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import untiword.components.UWEditor;
@@ -53,6 +63,9 @@ import untiword.components.UWEditor;
  */
 public class UWGuiNew extends javax.swing.JFrame {
 
+    private FacebookUser _fBUser;
+    private AccountController _accountController;
+
     private WebPanel bottomPane;
     private WebBreadcrumb breadcrumb;
     private WebBreadcrumbToggleButton loginBreadcrumb;
@@ -62,6 +75,8 @@ public class UWGuiNew extends javax.swing.JFrame {
     private JPanel loginPane;
     private javax.swing.Box.Filler filler1;
     private javax.swing.Box.Filler filler2;
+    private javax.swing.Box.Filler filler3;
+    private javax.swing.Box.Filler filler4;
     private JPanel loginFormPan;
     private WebTextField serverAddr;
     private WebTextField serverPort;
@@ -138,6 +153,13 @@ public class UWGuiNew extends javax.swing.JFrame {
     private WebButton incIndTbButton;
     private WebButton clearTbButton;
     private WebDocumentPane docmentPane;
+    
+    private String Server;
+    private String Po;
+    private Editor mainEditor;
+    private boolean isConnect = false;
+    private ActionListener breadcrumbAction ;
+            
 
     public UWGuiNew() {
         initComponents();
@@ -159,6 +181,8 @@ public class UWGuiNew extends javax.swing.JFrame {
         filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 32767));
         openPane = new JPanel();
         editPane = new JPanel();
+        filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 32767));
+        filler4 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 32767));
 
         // Create control
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -168,13 +192,23 @@ public class UWGuiNew extends javax.swing.JFrame {
         bottomPane.setPaintSides(true, false, false, false);
         bottomPane.setUndecorated(false);
         bottomPane.setMargin(new Insets(3, 3, 3, 3));
+        
+        ActionListener getDocActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                    if (isConnect) {
+                        mainEditor.sendMessage(mainEditor.createControlMessage("getdoclist", 0, ""));
+                        System.out.println(e.getActionCommand());
+                    }
+            }
+        };
 
-        ActionListener breadcrumbAction = new ActionListener() {
+        breadcrumbAction = new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
                 CardLayout cl = (CardLayout) (centerPane.getLayout());
-                WebBreadcrumbToggleButton button = (WebBreadcrumbToggleButton) e.getSource();
+                WebBreadcrumbToggleButton button = (WebBreadcrumbToggleButton) e.getSource();                
                 cl.show(centerPane, button.getName());
             }
         };
@@ -184,7 +218,11 @@ public class UWGuiNew extends javax.swing.JFrame {
         loginBreadcrumb.addActionListener(breadcrumbAction);
 
         openBreadcrumb.setName("OpenCard");
-        openBreadcrumb.addActionListener(breadcrumbAction);
+        openBreadcrumb.addActionListener(breadcrumbAction);        
+                
+
+        openBreadcrumb.addActionListener(getDocActionListener);
+
 
         editBreadcrumb.setName("EditCard");
         editBreadcrumb.addActionListener(breadcrumbAction);
@@ -226,7 +264,23 @@ public class UWGuiNew extends javax.swing.JFrame {
         WebButton loginFBbtn = new WebButton("Login with Facebook");
         loginFBbtn.setBounds(100, 115, 200, 30);
 
+        loginFBbtn.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FBLoginJFrame fBLoginJFrame;
+                try {
+                    fBLoginJFrame = new FBLoginJFrame();
+                    fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    fBLoginJFrame.setVisible(true);
+                    setFBLoginJFrameEventListener(fBLoginJFrame, loginFBbtn);
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(UWGui.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
         //WebButton button = new WebButton("Connect");
+
         loginFormPan.add(label);
         loginFormPan.add(serverAddr);
         loginFormPan.add(serverPort);
@@ -237,8 +291,9 @@ public class UWGuiNew extends javax.swing.JFrame {
 
         centerPane.add(loginPane, "LoginCard");
 
-        /* Create GUI for open here */
-        centerPane.add(openPane, "OpenCard");
+        /* Create GUI for open here */   
+        openPane.setLayout(new javax.swing.BoxLayout(openPane, javax.swing.BoxLayout.Y_AXIS));
+        centerPane.add(openPane, "OpenCard");      
 
         /* Create GUI for edit here */
         addEditor(editPane);
@@ -565,5 +620,59 @@ public class UWGuiNew extends javax.swing.JFrame {
         editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
 
         panel.add(editorTabPan, java.awt.BorderLayout.CENTER);
+    private void setFBLoginJFrameEventListener(FBLoginJFrame fBLoginJFrame, WebButton loginFBbtn) {
+        if (fBLoginJFrame != null) {
+            try {
+                FBLoginJFrameEventListener fBLoginJFrameEventListener = new FBLoginJFrameEventListener() {
+
+                    @Override
+                    public void loginSuccess() {
+                        if (fBLoginJFrame.getLoginSuccess()) {
+                            if (loginFBbtn != null) {
+                                _fBUser = fBLoginJFrame.getUser();
+                                if (_fBUser != null) {
+                                    fBLoginJFrame.close();
+                                    try {
+//                                        Server = serverAddr.getText();
+//                                        Po = serverPort.getText();
+                                        Server = "127.0.0.1";
+                                        Po = "8000";
+                                        mainEditor = new Editor(Server, Po);
+                                        mainEditor.listener = new EditorListener() {
+
+                                        @Override
+                                        public void panelCreated(WebPanel input) {
+                                            
+                                            openPane.removeAll();                                            
+                                            openPane.add(input);      
+                                            openPane.revalidate();
+                                            openPane.repaint();
+                                            
+                                            openPane.add(filler3);
+                                            
+                                            openBreadcrumb.setSelected(true); 
+                                            openPane.add(filler4);
+                                              
+                                            CardLayout cl = (CardLayout) (centerPane.getLayout());
+                                            cl.show(centerPane, "OpenCard");
+                                        }
+                                    };
+                                    } catch (IOException ex) {
+                                        Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                    loginFBbtn.setText("Log in as " + _fBUser.getName());
+                                    
+                                    isConnect = true;
+                                }
+
+                            }
+                        }
+                    }
+                };
+                fBLoginJFrame.setFBLoginJFrameEventListener(fBLoginJFrameEventListener);
+            } catch (Exception e) {
+
+            }
+        }
     }
 }

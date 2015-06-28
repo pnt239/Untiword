@@ -5,6 +5,8 @@
  */
 package View.Account;
 
+import View.Account.Browsers.Browser;
+import View.Account.Browsers.BrowserProvider;
 import Controller.AccountController.AccountController;
 import Controller.AccountController.FacebookController;
 import Model.Account.FacebookUser;
@@ -15,13 +17,10 @@ import chrriis.dj.nativeswing.swtimpl.components.WebBrowserListener;
 import chrriis.dj.nativeswing.swtimpl.components.WebBrowserNavigationEvent;
 import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowOpeningEvent;
 import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowWillOpenEvent;
-import com.restfb.types.User;
 import java.awt.BorderLayout;
-import static java.lang.System.out;
 import java.net.MalformedURLException;
 import org.openide.util.Lookup;
 import java.net.URL;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
