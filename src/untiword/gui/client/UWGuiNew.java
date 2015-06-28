@@ -9,7 +9,6 @@ import Controller.AccountController.AccountController;
 import Model.Account.FacebookUser;
 import View.Account.FBLoginJFrame;
 import View.Account.FBLoginJFrameEventListener;
-import View.Editor;
 import com.alee.extended.breadcrumb.WebBreadcrumb;
 import com.alee.extended.breadcrumb.WebBreadcrumbButton;
 import com.alee.extended.breadcrumb.WebBreadcrumbToggleButton;
@@ -18,17 +17,22 @@ import com.alee.extended.panel.GroupPanel;
 import com.alee.extended.panel.WebButtonGroup;
 import com.alee.extended.tab.DocumentData;
 import com.alee.extended.tab.WebDocumentPane;
+import com.alee.global.StyleConstants;
 import com.alee.laf.WebLookAndFeel;
 import com.alee.laf.button.WebButton;
 import com.alee.laf.button.WebToggleButton;
 import com.alee.laf.combobox.WebComboBox;
 import com.alee.laf.label.WebLabel;
+import com.alee.laf.list.WebList;
+import com.alee.laf.list.WebListModel;
 import com.alee.laf.menu.WebCheckBoxMenuItem;
 import com.alee.laf.menu.WebMenu;
 import com.alee.laf.menu.WebMenuBar;
 import com.alee.laf.menu.WebMenuItem;
 import com.alee.laf.menu.WebPopupMenu;
+import com.alee.laf.optionpane.WebOptionPane;
 import com.alee.laf.panel.WebPanel;
+import com.alee.laf.scroll.WebScrollPane;
 import com.alee.laf.text.WebTextField;
 import com.alee.laf.toolbar.ToolbarStyle;
 import com.alee.laf.toolbar.WebToolBar;
@@ -45,19 +49,34 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import org.eclipse.swt.internal.win32.OS;
 import untiword.utils.Resources;
 import untiword.components.UWEditor;
+import untiword.controller.ClientController;
+import untiword.events.CreateDocumentListener;
+import untiword.events.ListDocumentEvent;
+import untiword.events.ListDocumentListener;
+import untiword.events.NotFoundDocumentEvent;
+import untiword.events.NotFoundDocumentListener;
+import untiword.events.RenameDocumentEvent;
+import untiword.events.RenameDocumentListener;
+import untiword.model.DocumentIDsAndNames;
 
 /**
  *
@@ -155,17 +174,32 @@ public class UWGuiNew extends javax.swing.JFrame {
     private WebButton incIndTbButton;
     private WebButton clearTbButton;
     private WebDocumentPane docmentPane;
-    
+    //private static JList docsList;
+    private WebList docsList;
+    private WebListModel docsListModel;
+    private JList documentList;
+    private JScrollPane documentListScrollPane;
+    //private JButton createButton;
+    private WebButton createButton;
+    private JButton openButton;
+    private JLabel openLabel;
+    private JLabel createLabel;
+    private JLabel orLabel;
+    //private JTextField docNameTextField;
+    private WebTextField docNameTextField;
+    private JScrollPane scrollPane;
+
     private Resources resources;
 
     private String Server;
     private String Po;
-    private Editor mainEditor;
+    private ClientController clientController;
     private boolean isConnect = false;
     private ActionListener breadcrumbAction;
 
     public UWGuiNew() {
         initComponents();
+        createClient();
     }
 
     private void initComponents() {
@@ -201,7 +235,7 @@ public class UWGuiNew extends javax.swing.JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (isConnect) {
-                    mainEditor.sendMessage(mainEditor.createControlMessage("getdoclist", 0, ""));
+                    clientController.sendMessage(clientController.createControlMessage("getdoclist", 0, ""));
                     System.out.println(e.getActionCommand());
                 }
             }
@@ -277,7 +311,7 @@ public class UWGuiNew extends javax.swing.JFrame {
                     fBLoginJFrame.setVisible(true);
                     setFBLoginJFrameEventListener(fBLoginJFrame, loginFBbtn);
                 } catch (MalformedURLException ex) {
-                    Logger.getLogger(UWGui.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
@@ -294,7 +328,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         centerPane.add(loginPane, "LoginCard");
 
         /* Create GUI for open here */
-        openPane.setLayout(new javax.swing.BoxLayout(openPane, javax.swing.BoxLayout.Y_AXIS));
+        addOpenNew(openPane);
         centerPane.add(openPane, "OpenCard");
 
         /* Create GUI for edit here */
@@ -306,6 +340,134 @@ public class UWGuiNew extends javax.swing.JFrame {
         // Pack
         this.pack();
         this.setSize(800, 600);
+    }
+
+    private void createClient() {
+        clientController = new ClientController();
+        clientController.addNotFoundListener(new NotFoundDocumentListener() {
+
+            @Override
+            public void NotFoundDocument(NotFoundDocumentEvent event) {
+                docsListModel.removeAllElements();
+                docsListModel.addElement("There are no documents on the server.");
+            }
+        });
+
+        clientController.addRenameDocumentListener(new RenameDocumentListener() {
+
+            @Override
+            public void RenameDocument(RenameDocumentEvent event) {
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        });
+
+        clientController.addListDocumentListener(new ListDocumentListener() {
+
+            @Override
+            public void ListDocument(ListDocumentEvent event) {
+                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                docsListModel.removeAllElements();
+                String[] docs = event.DocumentNameList();
+                for (String doc : docs) {
+                    docsListModel.addElement(doc);
+                }
+            }
+        });
+
+        clientController.setCreateDocumentListener(new CreateDocumentListener() {
+
+            @Override
+            public void getUWPanel(UWEditor editor) {
+                editBreadcrumb.setSelected(true);
+                String num = "" + editor.getNum();
+                docmentPane.openDocument(new DocumentData(num, editor.getName(), editor));
+
+                CardLayout cl = (CardLayout) (centerPane.getLayout());
+                cl.show(centerPane, "EditCard");
+            }
+        });
+    }
+
+    private void addOpenNew(JPanel panel) {
+        panel.setLayout(new javax.swing.BoxLayout(openPane, javax.swing.BoxLayout.Y_AXIS));
+
+        WebPanel ret = new WebPanel(true);
+        ret.setUndecorated(false);
+        ret.setLayout(new BorderLayout());
+        ret.setMargin(50);
+        ret.setRound(StyleConstants.largeRound);
+
+        final WebPanel panel2 = new WebPanel(true);
+        panel2.setPaintFocus(true);
+        panel2.setMargin(10);
+        panel2.add(new WebLabel("Create New Doc", WebLabel.CENTER), BorderLayout.NORTH);
+
+        docNameTextField = new WebTextField(15);
+        docNameTextField.setHideInputPromptOnFocus(false);
+        docNameTextField.setInputPrompt("Enter Document Name...");
+        docNameTextField.setInputPromptFont(docNameTextField.getFont().deriveFont(Font.ITALIC));
+        docNameTextField.setMargin(5);
+
+        docsListModel = new WebListModel<String>();
+        //docsListModel.add("There are no documents on the server." );
+        docsList = new WebList(docsListModel);
+        docsList.setVisibleRowCount(10);
+        docsList.setEditable(false);
+        docsList.setSelectedIndex(0);
+        docsList.setMinimumSize(new Dimension(0, 200));
+        WebScrollPane scrolllist = new WebScrollPane(docsList);
+
+        scrolllist.setMaximumSize(new Dimension(200, 600));
+        final WebPanel panel1 = new WebPanel(true);
+        panel1.setPaintFocus(true);
+        panel1.setMargin(10);
+        panel1.add(new WebLabel("Select From List Files", WebLabel.CENTER), BorderLayout.NORTH);
+        panel1.add(scrolllist, BorderLayout.CENTER);
+
+        docNameTextField.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                String newName = docNameTextField.getText();
+                docNameTextField.setText("");
+                if (newName.contains("|") || newName.contains("~")) {
+                    WebOptionPane.showMessageDialog(null, "pipes and tildas cannot be used in document names", "Error", WebOptionPane.ERROR_MESSAGE);
+                    //WebOptionPane.showMessageDialog(editor.getTabbedPane(), "pipes and tildas cannot be used in document names");
+                    return;
+                }
+                clientController.sendMessage(clientController.createControlMessage("requestNew",
+                        -1, newName));
+            }
+        });
+
+        createButton = new WebButton("Create");
+        createButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                String newName = docNameTextField.getText();
+                docNameTextField.setText("");
+                if (newName.equals("Enter Document Name") || newName.equals("")) {
+                    newName = "New Document";
+                }
+                clientController.sendMessage(clientController.createControlMessage("requestNew",
+                        -1, newName));
+
+            }
+        });
+
+        docsList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    openDocument();
+                }
+            }
+        });
+
+        panel2.add(createButton, BorderLayout.SOUTH);
+        panel2.add(docNameTextField, BorderLayout.CENTER);
+
+        ret.add(new GroupPanel(4, false, panel1, new WebLabel("OR", WebLabel.CENTER), panel2));
+
+        panel.add(filler3);
+        panel.add(ret);
+        panel.add(filler4);
     }
 
     private void addEditor(JPanel panel) {
@@ -362,17 +524,17 @@ public class UWGuiNew extends javax.swing.JFrame {
         undoMenuItem = new WebMenuItem("Undo", resources.loadIcon("resources/edit_undo.png"));
         editMenu.add(undoMenuItem);
 
-        redoMenuItem = new WebMenuItem("Redo");
+        redoMenuItem = new WebMenuItem("Redo", resources.loadIcon("resources/edit_redo.png"));
         editMenu.add(redoMenuItem);
         editMenu.addSeparator();
 
-        cutMenuItem = new WebMenuItem("Cut");
+        cutMenuItem = new WebMenuItem("Cut", resources.loadIcon("resources/edit_cut.png"));
         editMenu.add(cutMenuItem);
 
-        copyMenuItem = new WebMenuItem("Copy");
+        copyMenuItem = new WebMenuItem("Copy", resources.loadIcon("resources/edit_copy.png"));
         editMenu.add(copyMenuItem);
 
-        pasteMenuItem = new WebMenuItem("Paste");
+        pasteMenuItem = new WebMenuItem("Paste", resources.loadIcon("resources/edit_paste.png"));
         editMenu.add(pasteMenuItem);
         editMenu.addSeparator();
 
@@ -478,10 +640,10 @@ public class UWGuiNew extends javax.swing.JFrame {
         printTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         editorToolBar.add(printTbButton);
 
-        undoTbButton = new WebButton("Undo");
-        undoTbButton.setFocusable(false);
-        undoTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        undoTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        undoTbButton = WebButton.createIconWebButton(resources.loadIcon("resources/edit_undo.png"), StyleConstants.smallRound, true);
+//undoTbButton.setFocusable(false);
+        //undoTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        //undoTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         editorToolBar.add(undoTbButton);
 
         redoTbButton = new WebButton("Redo");
@@ -619,10 +781,31 @@ public class UWGuiNew extends javax.swing.JFrame {
 
 //        UWEditor editor = new UWEditor();
 //        docmentPane.openDocument(new DocumentData("id", "title", editor));
-//        editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
+        editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
 
         panel.add(editorTabPan, java.awt.BorderLayout.CENTER);
 
+    }
+
+    private void openDocument() {
+        String nameId = clientController.getDocumentIdAndNames().get((int) docsList.getSelectedIndex());
+        DocumentIDsAndNames docNameID = new DocumentIDsAndNames(nameId);
+        int num = docNameID.getNum();
+        String name = docNameID.toString();
+
+        UWEditor newDocWindow = new UWEditor(num, name, clientController);
+        newDocWindow.setVisible(true);
+        clientController.getDocIDtoDocPanel().put(newDocWindow.getNum(), newDocWindow);
+        
+        String numString = "" + num;
+        docmentPane.openDocument(new DocumentData(numString, name, newDocWindow));
+
+        CardLayout cl = (CardLayout) (centerPane.getLayout());
+        cl.show(centerPane, "EditCard");
+        editBreadcrumb.setSelected(true);
+        
+        clientController.getUser().addDocument(num);
+        clientController.sendMessage(clientController.createControlMessage("load", num, name));
     }
 
     private void setFBLoginJFrameEventListener(FBLoginJFrame fBLoginJFrame, WebButton loginFBbtn) {
@@ -638,39 +821,15 @@ public class UWGuiNew extends javax.swing.JFrame {
                                 if (_fBUser != null) {
                                     fBLoginJFrame.close();
                                     try {
-//                                        Server = serverAddr.getText();
-//                                        Po = serverPort.getText();
+//                                      Server = serverAddr.getText();
+//                                      Po = serverPort.getText();
                                         Server = "127.0.0.1";
                                         Po = "8000";
-                                        mainEditor = new Editor(Server, Po);
-                                        mainEditor.listener = new EditorListener() {
+                                        clientController.connectToServer(Server, Po);
 
-                                            @Override
-                                            public void panelCreated(WebPanel input) {
-
-                                                openPane.removeAll();
-                                                openPane.add(input);
-                                                openPane.revalidate();
-                                                openPane.repaint();
-
-                                                openPane.add(filler3);
-
-                                                openBreadcrumb.setSelected(true);
-                                                openPane.add(filler4);
-
-                                                CardLayout cl = (CardLayout) (centerPane.getLayout());
-                                                cl.show(centerPane, "OpenCard");
-                                            }
-                                        };
-                                        mainEditor.docListener = new DocumentsListener() {
-
-                                            @Override
-                                            public void getUWPanel(UWEditor editor) {
-                                                editBreadcrumb.setSelected(true);
-                                                docmentPane.openDocument(new DocumentData("id", "title", editor));
-                                                editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
-                                            }
-                                        };
+                                        CardLayout cl = (CardLayout) (centerPane.getLayout());
+                                        cl.show(centerPane, "OpenCard");
+                                        openBreadcrumb.setSelected(true);
                                     } catch (IOException ex) {
                                         Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
                                     }

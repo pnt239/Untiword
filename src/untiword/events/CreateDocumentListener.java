@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package untiword.gui.client;
+package untiword.events;
 
 import java.util.EventListener;
 import untiword.components.UWEditor;
@@ -12,6 +12,6 @@ import untiword.components.UWEditor;
  *
  * @author Untitled25364
  */
-public interface DocumentsListener extends EventListener{
+public interface CreateDocumentListener extends EventListener{
     public void getUWPanel(UWEditor editor);
 }

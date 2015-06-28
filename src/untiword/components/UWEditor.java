@@ -5,8 +5,6 @@
  */
 package untiword.components;
 
-import Controller.DocumentContentListener;
-import View.Editor;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -30,6 +28,8 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.html.HTMLDocument;
 import untiword.components.docx.BorderAttributes;
 import untiword.components.docx.DocxDocument;
+import untiword.controller.ClientController;
+import untiword.events.DocumentContentListener;
 
 /**
  *
@@ -49,16 +49,14 @@ public class UWEditor extends JScrollPane implements ActionListener {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public UWEditor(final int docNum, String docName, final Editor editor) {
+    public UWEditor(final int docNum, String docName, ClientController client) {
         //super(new UWEditorPane(), ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         super(new UWEditorPane());
         this.docNum = docNum;
         this.docName = docName;
-        listener = new DocumentContentListener(docNum, editor);
+        listener = new DocumentContentListener(docNum, client);
         
-
         init();
-        
         _editor.getDocument().addDocumentListener(listener);
     }
     
