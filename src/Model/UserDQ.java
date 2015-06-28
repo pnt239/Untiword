@@ -99,8 +99,14 @@ public class UserDQ {
      */
     public synchronized void pushRequest(String requestText) {
         ServerRequestDQ request = new ServerRequestDQ(requestText);
-        
-        documents.get(request.getDocumentID()).pushRequest(requestText);
+        if(!request.isCustomRequest())
+        {
+            documents.get(request.getDocumentID()).pushRequest(requestText);
+        }
+        else
+        {
+            //process custom request here!
+        }
     }
     
     /**
@@ -145,8 +151,18 @@ public class UserDQ {
      * @return String - updated selection
      */
     public synchronized String updateSelection(String requestText) {
-        ServerRequestDQ request = new ServerRequestDQ(requestText);
+        String result;
         
-        return documents.get(request.getDocumentID()).updateSelection(requestText);
+        ServerRequestDQ request = new ServerRequestDQ(requestText);
+        if(!request.isCustomRequest())
+        {
+            result = documents.get(request.getDocumentID()).updateSelection(requestText);
+        }
+        else
+        {
+            result = "";
+        }
+        
+        return result;
     }
 }

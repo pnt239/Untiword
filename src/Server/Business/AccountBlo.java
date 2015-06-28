@@ -9,6 +9,24 @@ package Server.Business;
  *
  * @author Lilium Aikia
  */
-public class AccountBlo {
+public class AccountBlo 
+{
+    public static AccountBlo _instance = null;
+    public static AccountBlo getInstance()
+    {
+        if(_instance == null)
+        {
+            _instance = new AccountBlo();
+        }
+        
+        return _instance;
+    }
+    
+    public boolean exists(String userToken)
+    {
+        boolean result = false;
+        
+        return result;
+    }
     
 }

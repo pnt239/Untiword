@@ -11,26 +11,19 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import Controller.MessageHandlingThread;
+import Model.Account.AccountLoginViewModel;
 import Model.ServerRequestDQ;
 import Model.UserDQ;
 import com.alee.laf.optionpane.WebOptionPane;
-import com.alee.laf.panel.WebPanel;
-import untiword.gui.client.DocumentGui;
+import libraryclasses.CustomRequest;
 import untiword.gui.client.EditorListener;
 import untiword.gui.client.WordGui;
 
@@ -64,7 +57,33 @@ public class Editor extends JFrame {
     private int ignoreNext = 0;
     private JTabbedPane tabbedPane;
     private HashMap<Integer, WordGui> docIDtoDocPanel;
+    private AccountLoginViewModel _accountloginViewModel;
+    
+    private EditorEventListener _loginEventListener;
+    public EditorEventListener getEditorEventListener()
+    {
+        return _loginEventListener;
+    }
+    
+    public void setEditorEventListener(EditorEventListener value)
+    {
+        _loginEventListener = value;
+    }
+    
+    private void createNewDocPanel()
+    {
+        tabbedPane.add("Open/Create", new NewDocPanel(this));
 
+
+        GroupLayout layout = new GroupLayout(getContentPane());
+        setLayout(layout);
+
+        // get some margins around components by default
+        layout.setAutoCreateContainerGaps(true);
+        layout.setAutoCreateGaps(true);
+        layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(tabbedPane));
+        layout.setVerticalGroup(layout.createSequentialGroup().addComponent(tabbedPane));
+    }
 
     /**
      * Creates new Editor object with a tabbed pane, opens a message handling
@@ -74,15 +93,12 @@ public class Editor extends JFrame {
      * @throws IOException
      */
     public Editor(String server, String port) throws UnknownHostException, IOException {
-
-        docIDtoDocPanel = new HashMap<Integer, WordGui>();
+        //_accountloginViewModel = model;
+        docIDtoDocPanel = new HashMap<>();
 
         showGreetingDialog(server, port);
-
         out = new PrintWriter(getServerSocket().getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(getServerSocket()
-                .getInputStream()));
-
+        in = new BufferedReader(new InputStreamReader(getServerSocket().getInputStream()));
         handleServerGreeting();
 
         tabbedPane = new JTabbedPane();
@@ -105,23 +121,6 @@ public class Editor extends JFrame {
                 // shut down background thread
             }
         });
-
-        tabbedPane.add("Open/Create", new NewDocPanel(this));
-
-
-        GroupLayout layout = new GroupLayout(getContentPane());
-        setLayout(layout);
-
-        // get some margins around components by default
-        layout.setAutoCreateContainerGaps(true);
-        layout.setAutoCreateGaps(true);
-
-        layout.setHorizontalGroup(layout.createParallelGroup(
-                GroupLayout.Alignment.LEADING).addComponent(tabbedPane));
-
-        layout.setVerticalGroup(layout.createSequentialGroup().addComponent(
-                tabbedPane));
-
     }
 
     /**
@@ -141,16 +140,21 @@ public class Editor extends JFrame {
      * 
      * @throws IOException
      */
-    private void handleServerGreeting() throws IOException {
+    private void handleServerGreeting() throws IOException {        
         String helloMessage = in.readLine();
         String[] elements = helloMessage.split("\\|");
-        if (!elements[0].equals("HELLO")) {
-            JOptionPane
-                    .showMessageDialog(null,
-                            "Sorry, the server has encountered unexpected error. Please try again.");
+        if (!elements[0].equals("HELLO")) {          
+            JOptionPane.showMessageDialog(null, "Sorry, the server has encountered unexpected error. Please try again.");         
             System.exit(0);
-        } else {
-            setUser(new UserDQ(elements[1]));
+        } else {         
+            //setUser(new UserDQ(elements[1]));
+            user = new UserDQ(elements[1]);
+            CustomRequest request = new CustomRequest(3);
+            request.setAction("AUTHORIZE");
+            request.setValue("applicationId", user.getUserID());
+            request.setValue("loginType", "facebook");
+            request.setValue("accessToken", "123456");
+            this.sendMessage(request.toString());
         }
     }
 
@@ -219,8 +223,7 @@ public class Editor extends JFrame {
                 String[] splitDoc = splitString[2].split("~");
                 getUser().addDocument(Integer.parseInt(splitDoc[0]));
                 
-                WordGui newDocWindow = new WordGui(Integer.parseInt(splitDoc[0])
-                        , splitDoc[1], this);
+                WordGui newDocWindow = new WordGui(Integer.parseInt(splitDoc[0]), splitDoc[1], this);
                 newDocWindow.setLocationRelativeTo(null);
                 newDocWindow.setVisible(true);
                 newDocWindow.setTitle(splitDoc[1]);
@@ -235,12 +238,16 @@ public class Editor extends JFrame {
 //                tabbedPane.add("Open/Create", new NewDocPanel(this));
 //                initTabComponent(tabbedPane.getTabCount() - 2);
 //                tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 2);
-                this.sendMessage(createControlMessage("load",
-                        Integer.parseInt(splitDoc[0]), splitDoc[1]));
+                this.sendMessage(createControlMessage("load", Integer.parseInt(splitDoc[0]), splitDoc[1]));
 
             }
 
-        } else {
+        }
+        else if(line.startsWith("CUSTOM_REQUEST/AUTHORIZE")) 
+        {
+            createNewDocPanel();
+        }
+        else {
             this.getUser().pushRequest(line);
             String[] splitString = line.split("\\|");
 
@@ -286,12 +293,19 @@ public class Editor extends JFrame {
             }
             panelToUpdate.getTextPane().setText(content);
 
-            if (newSelection.getAction().equals("INSERT")) {
-                tempPane.setCaretPosition(newSelection.getBeginning());
-            } else {
-                tempPane.setSelectionStart(newSelection.getBeginning());
-                tempPane.setSelectionEnd(newSelection.getEnd());
+            if(!newSelection.isCustomRequest())
+            {
+                if (newSelection.getAction().equals("INSERT")) {
+                    tempPane.setCaretPosition(newSelection.getBeginning());
+                } else {
+                    tempPane.setSelectionStart(newSelection.getBeginning());
+                    tempPane.setSelectionEnd(newSelection.getEnd());
+                }
             }
+            else
+            {
+                //Process custom request here
+            }           
         }
     }
 
