@@ -318,14 +318,14 @@ public class UWGuiNew extends javax.swing.JFrame {
 
         fileMenu = new WebMenu("File");
 
-        shareMenuItem = new WebMenuItem("Share...");
+        shareMenuItem = new WebMenuItem("Share..." , resources.loadIcon("resources/share.png"));
         fileMenu.add(shareMenuItem);
         fileMenu.addSeparator();
 
-        newMenuItem = new WebMenuItem("New");
+        newMenuItem = new WebMenuItem("New", resources.loadIcon("resources/new.png"));
         fileMenu.add(newMenuItem);
 
-        openMenuItem = new WebMenuItem("Open");
+        openMenuItem = new WebMenuItem("Open", resources.loadIcon("resources/open.png"));
         fileMenu.add(openMenuItem);
 
         renameMenuItem = new WebMenuItem("Rename");
@@ -352,27 +352,27 @@ public class UWGuiNew extends javax.swing.JFrame {
         printPreviewMenuItem = new WebMenuItem("Print preview");
         fileMenu.add(printPreviewMenuItem);
 
-        printMenuItem = new WebMenuItem("Print");
+        printMenuItem = new WebMenuItem("Print", resources.loadIcon("resources/print.png"));
         fileMenu.add(printMenuItem);
 
         editorMenuBar.add(fileMenu);
 
         editMenu = new WebMenu("Edit");
 
-        undoMenuItem = new WebMenuItem("Undo", resources.loadIcon("resources/edit_undo.png"));
+        undoMenuItem = new WebMenuItem("Undo", resources.loadIcon("resources/undo.png"));
         editMenu.add(undoMenuItem);
 
-        redoMenuItem = new WebMenuItem("Redo");
+        redoMenuItem = new WebMenuItem("Redo", resources.loadIcon("resources/redo.png"));
         editMenu.add(redoMenuItem);
         editMenu.addSeparator();
 
-        cutMenuItem = new WebMenuItem("Cut");
+        cutMenuItem = new WebMenuItem("Cut", resources.loadIcon("resources/cut.png"));
         editMenu.add(cutMenuItem);
 
-        copyMenuItem = new WebMenuItem("Copy");
+        copyMenuItem = new WebMenuItem("Copy", resources.loadIcon("resources/copy.png"));
         editMenu.add(copyMenuItem);
 
-        pasteMenuItem = new WebMenuItem("Paste");
+        pasteMenuItem = new WebMenuItem("Paste", resources.loadIcon("resources/paste.png"));
         editMenu.add(pasteMenuItem);
         editMenu.addSeparator();
 
@@ -472,19 +472,19 @@ public class UWGuiNew extends javax.swing.JFrame {
         editorToolBar.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
         //editorToolBar.setRollover(true);
 
-        printTbButton = new WebButton("Print");
+        printTbButton = new WebButton("", resources.loadIcon("resources/print_mini.png"));
         printTbButton.setFocusable(false);
         printTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         printTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         editorToolBar.add(printTbButton);
 
-        undoTbButton = new WebButton("Undo");
+        undoTbButton = new WebButton("", resources.loadIcon("resources/undo_mini.png"));
         undoTbButton.setFocusable(false);
         undoTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         undoTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         editorToolBar.add(undoTbButton);
 
-        redoTbButton = new WebButton("Redo");
+        redoTbButton = new WebButton("", resources.loadIcon("resources/redo_mini.png"));
         redoTbButton.setFocusable(false);
         redoTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         redoTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -492,38 +492,38 @@ public class UWGuiNew extends javax.swing.JFrame {
         editorToolBar.addSeparator();
 
         zoomTbComboBox = new WebComboBox();
-        zoomTbComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+        zoomTbComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Arial", "Tahoma", "Consolas", "Linh tinh"}));
         zoomTbComboBox.setEditable(true);
         editorToolBar.add(zoomTbComboBox);
         editorToolBar.addSeparator();
 
         styleTbComboBox = new WebComboBox();
-        styleTbComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+        styleTbComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"9", "12", "14", "20"}));
         editorToolBar.add(styleTbComboBox);
         editorToolBar.addSeparator();
 
         fontTbComboBox = new WebComboBox();
-        fontTbComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+        fontTbComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Heading 1", "Heading 2", "Heading 3", "Heading 4"}));
         editorToolBar.add(fontTbComboBox);
         editorToolBar.addSeparator();
 
         fotnSizeTbComboBox = new WebComboBox();
-        fotnSizeTbComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+        fotnSizeTbComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"100%", "125%", "150%", "200%"}));
         zoomTbComboBox.setEditable(true);
         editorToolBar.add(fotnSizeTbComboBox);
         editorToolBar.addSeparator();
 
-        boldTbButton = new WebToggleButton("B");
+        boldTbButton = new WebToggleButton("", resources.loadIcon("resources/bold.png"));
         boldTbButton.setFocusable(false);
         boldTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         boldTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
 
-        italicTbButton = new WebToggleButton("I");
+        italicTbButton = new WebToggleButton("", resources.loadIcon("resources/italic.png"));
         italicTbButton.setFocusable(false);
         italicTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         italicTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
 
-        underlineTbButton = new WebToggleButton("U");
+        underlineTbButton = new WebToggleButton("", resources.loadIcon("resources/underline.png"));
         underlineTbButton.setFocusable(false);
         underlineTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         underlineTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -536,36 +536,36 @@ public class UWGuiNew extends javax.swing.JFrame {
         editorToolBar.add(colorTbButton);
         editorToolBar.addSeparator();
 
-        linkTbButton = new WebButton("Link");
+        linkTbButton = new WebButton("", resources.loadIcon("resources/share.png"));
         linkTbButton.setFocusable(false);
         linkTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         linkTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         editorToolBar.add(linkTbButton);
 
-        commentTbButton = new WebButton("Comment");
+        commentTbButton = new WebButton("", resources.loadIcon("resources/comment.png"));
         commentTbButton.setFocusable(false);
         commentTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         commentTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         editorToolBar.add(commentTbButton);
         editorToolBar.addSeparator();
 
-        leftTbButton = new WebToggleButton("Left");
+        leftTbButton = new WebToggleButton("", resources.loadIcon("resources/left.png"));
         leftTbButton.setSelected(true);
         leftTbButton.setFocusable(false);
         leftTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         leftTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
 
-        centerTbButton = new WebToggleButton("Center");
+        centerTbButton = new WebToggleButton("", resources.loadIcon("resources/center.png"));
         centerTbButton.setFocusable(false);
         centerTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         centerTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
 
-        rightTbButton = new WebToggleButton("Right");
+        rightTbButton = new WebToggleButton("", resources.loadIcon("resources/right.png"));
         rightTbButton.setFocusable(false);
         rightTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         rightTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
 
-        justifyTbButton = new WebToggleButton("Justify");
+        justifyTbButton = new WebToggleButton("", resources.loadIcon("resources/justify.png"));
         justifyTbButton.setFocusable(false);
         justifyTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         justifyTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -576,7 +576,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         editorToolBar.addSeparator();
 
         lineSpaceTbButton = new WebComboBox();
-        lineSpaceTbButton.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
+        lineSpaceTbButton.setModel(new javax.swing.DefaultComboBoxModel(new String[]{"1", "1.15", "1.5", "2.0"}));
         editorToolBar.add(lineSpaceTbButton);
         editorToolBar.addSeparator();
 
@@ -591,14 +591,14 @@ public class UWGuiNew extends javax.swing.JFrame {
 
         editorToolBar.addSeparator();
 
-        decIndTbButton = new WebButton("Inc");
+        decIndTbButton = new WebButton("", resources.loadIcon("resources/increase.png"));
         decIndTbButton.setFocusable(false);
         decIndTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         decIndTbButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         editorToolBar.add(decIndTbButton);
         editorToolBar.addSeparator();
 
-        incIndTbButton = new WebButton("Dec");
+        incIndTbButton = new WebButton("", resources.loadIcon("resources/decrease.png"));
         incIndTbButton.setToolTipText("");
         incIndTbButton.setFocusable(false);
         incIndTbButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
