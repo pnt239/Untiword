@@ -7,7 +7,6 @@ package View.Account;
 
 import View.Account.Browsers.Browser;
 import View.Account.Browsers.BrowserProvider;
-import Controller.AccountController.AccountController;
 import Controller.AccountController.FacebookController;
 import Model.Account.FacebookUser;
 import chrriis.dj.nativeswing.NativeSwing;
@@ -33,7 +32,6 @@ public class FBLoginJFrame extends javax.swing.JFrame {
     private FBLoginJFrameEventListener _fbBLoginJFrameEventListener;
     private boolean _loginSuccess;
     private Browser _browser;
-    private AccountController _accountController;
     
     public void close()
     {
@@ -54,8 +52,8 @@ public class FBLoginJFrame extends javax.swing.JFrame {
         try
         {
             String url = _browser.getResourceLocation();
-            String at = _accountController.getFacebookController().parseUserAccessTokenUrl(url);
-            user = _accountController.getFacebookController().getUser(at);
+            String at = FacebookController.getInstance().parseUserAccessTokenUrl(url);
+            user = FacebookController.getInstance().getUser(at);
 //            out.print(url + "\n");
 //            out.print(_browser.getHtmlContent() + "\n");
 //            out.print(at + "\n");
@@ -154,8 +152,7 @@ public class FBLoginJFrame extends javax.swing.JFrame {
      * @throws java.net.MalformedURLException
      */
     public FBLoginJFrame() throws MalformedURLException {
-        initComponents();      
-        _accountController = new AccountController();
+        initComponents();
         NativeSwing.initialize();
         setLayout(new BorderLayout());
         BrowserProvider bp = Lookup.getDefault().lookup(BrowserProvider.class);
@@ -167,11 +164,9 @@ public class FBLoginJFrame extends javax.swing.JFrame {
             _browser.clearSessionCookies();
             _browser.getWebBrowser().setMenuBarVisible(false);
             _browser.getWebBrowser().setButtonBarVisible(false);
-            _browser.getWebBrowser().setLocationBarVisible(false);
+            _browser.getWebBrowser().setLocationBarVisible(false);           
             
-            
-            FacebookController fc = new FacebookController();
-            _browser.browseTo(new URL(fc.getFbUserAccessTokenUrl()));
+            _browser.browseTo(new URL(FacebookController.getInstance().getFbUserAccessTokenUrl()));
             //out.print(fc.getFbUserAccessTokenUrl());
         }
     }
@@ -217,15 +212,12 @@ public class FBLoginJFrame extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(FBLoginJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(FBLoginJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(FBLoginJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(FBLoginJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        //</editor-fold>
+        
         //</editor-fold>
         //</editor-fold>
 

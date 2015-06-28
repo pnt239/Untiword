@@ -20,15 +20,19 @@ import javax.mail.internet.MimeMessage;
  */
 public class AccountController 
 {
-    private FacebookController _facebookController;
-    public FacebookController getFacebookController()
+    private static AccountController _instance = null;
+    public static AccountController getInstance()
     {
-        return _facebookController;
+        if(_instance == null)
+        {
+            _instance = new AccountController();
+        }
+        
+        return _instance;
     }
     
-    public AccountController()
+    private AccountController()
     {
-        _facebookController = new FacebookController();
     }
     
     

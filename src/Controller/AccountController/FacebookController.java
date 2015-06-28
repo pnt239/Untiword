@@ -35,13 +35,24 @@ import java.util.logging.Logger;
  */
 public class FacebookController 
 {
+    private static FacebookController _instance = null;
+    public static FacebookController getInstance()
+    {
+        if(_instance == null)
+        {
+            _instance = new FacebookController();
+        }
+        
+        return _instance;
+    }
+    
     private String _appId;
     private String _appSecret;
     private String _accessToken;
     private String _redirectUri;
     private FacebookClient _facebookClient;
     
-    public FacebookController()
+    private FacebookController()
     {       
         _appId = "1446350922337661";
         _appSecret = "bfa56d720b408d00edc8c282381992b6";

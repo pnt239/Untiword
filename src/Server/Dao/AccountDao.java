@@ -8,17 +8,24 @@ package Server.Dao;
 import Model.Account.Account;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
@@ -27,9 +34,37 @@ import org.xml.sax.SAXException;
  */
 public class AccountDao 
 {
+    private static AccountDao _instance= null;
+    public static AccountDao getInstance() throws ParserConfigurationException, SAXException, IOException, TransformerException
+    {
+        if(_instance == null)
+        {
+            _instance = new AccountDao();
+        }
+        
+        return _instance;
+    }
+    
     private String _dataPath;
+    private String _loginDataPath;
     private Document _doc;
+    private Document _loginDoc;
     private Element _root;
+    private Element _loginRoot;
+    
+    private void saveDatabase(Document doc, String path) throws TransformerConfigurationException, TransformerException
+    {
+        // write the content into xml file
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        DOMSource source = new DOMSource(doc);
+        StreamResult result = new StreamResult(new File(path));
+
+        // Output to console for testing
+        // StreamResult result = new StreamResult(System.out);
+
+        transformer.transform(source, result);
+    }
     
     private void createNewDataFile() throws ParserConfigurationException, TransformerException
     {
@@ -37,27 +72,32 @@ public class AccountDao
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 
         // root elements
-        Document doc = docBuilder.newDocument();
-        Element rootElement = doc.createElement("AccountDatabase");
-        doc.appendChild(rootElement);
+        _doc = docBuilder.newDocument();
+        _root = _doc.createElement("AccountDatabase");
+        _doc.appendChild(_root);
         
-        Attr attr = doc.createAttribute("LastAccountId");
-        attr.setValue("0");
-        rootElement.setAttributeNode(attr);
+        createAttribute(_root, "LastAccountId", "0");
+        createAttribute(_root, "LastDocumentId", "0");
         
-        // write the content into xml file
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        DOMSource source = new DOMSource(doc);
-        StreamResult result = new StreamResult(new File(_dataPath));
-
-        // Output to console for testing
-        // StreamResult result = new StreamResult(System.out);
-
-        transformer.transform(source, result);
-}
+        saveDatabase(_doc, _dataPath);
+    }
     
-    public AccountDao() throws ParserConfigurationException, SAXException, IOException, TransformerException
+    private void createNewLoginFile() throws ParserConfigurationException, TransformerException
+    {
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+
+        // root elements
+        _loginDoc = docBuilder.newDocument();
+        _loginRoot = _loginDoc.createElement("AccountLoginDatabase");
+        _loginDoc.appendChild(_loginRoot);
+        
+        createAttribute(_loginRoot, "LastAccountLoginId", "0");
+        
+        saveDatabase(_doc, _dataPath);
+    }
+    
+    private AccountDao() throws ParserConfigurationException, SAXException, IOException, TransformerException
     {
         _dataPath = "account.xml";
         File fXmlFile = new File(_dataPath);
@@ -73,6 +113,52 @@ public class AccountDao
         {
             createNewDataFile();
         }
+        
+        _loginDataPath = "account_login.xml";
+        File alFile = new File(_loginDataPath);
+        if(alFile.exists())
+        {
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            _loginDoc = dBuilder.parse(alFile);
+            _loginDoc.normalize();
+            _loginRoot = _loginDoc.getDocumentElement();
+        }
+        else
+        {
+            createNewLoginFile();
+        }
+    }
+    
+    private Attr createAttribute(Element parent, String name, String value)
+    {
+        Attr result = null;      
+        
+        if(parent != null)
+        {
+            result = parent.getOwnerDocument().createAttribute(name);
+            parent.setAttributeNode(result);
+            result.setValue(value);
+        }
+        
+        return result;
+    }
+    
+    public boolean setAttributeValue(Element parent, String name, String value)
+    {
+        boolean result = false;
+        
+        if(parent != null)
+        {
+            Attr attr = parent.getAttributeNode(name);
+            if(attr != null)
+            {
+                attr.setValue(value);
+                result = true;
+            }
+        }
+        
+        return result;
     }
     
     public Element toElement(Account input)
@@ -84,30 +170,243 @@ public class AccountDao
             result = _doc.createElement("Account");
             _root.appendChild(result);
             
-            Attr username = _doc.createAttribute("Username");
-            result.setAttributeNode(username);
-            username.setValue(input.getName());
+            createAttribute(result, "Id", String.valueOf(input.getId()));
+            createAttribute(result, "FacebookUserId", input.getFBUser().getUid());
+            createAttribute(result, "Name", input.getFBUser().getName());
+            createAttribute(result, "Email", input.getFBUser().getEmail());
         }
         
         return result;
     }
     
-    public int insertAccount(Account account)
+    public NodeList getNodes(String xPathString, Element dataSource) throws XPathExpressionException
+    {
+        NodeList result = null;
+        
+        if(xPathString != null
+                && dataSource != null)
+        {
+            XPath xPath = XPathFactory.newInstance().newXPath();
+            result = (NodeList)xPath.evaluate(xPathString, dataSource, XPathConstants.NODESET);
+        }    
+        
+        return result;
+    }
+    
+    public int insertAccount(Account account) throws XPathExpressionException, TransformerException
     {
         int result = -1;
         
-        if(account != null)
+        if(account != null
+                && !exists(account.getFBUser().getUid()))
         {
             int lastId = Integer.parseInt(_root.getAttribute("LastAccountId"));
             lastId++;
+            result = lastId;
             _root.setAttribute("LastAccountId", String.valueOf(lastId));
             
             Element accountXml = toElement(account);
+            _root.appendChild(accountXml);          
             
-            Attr id = _doc.createAttribute("Id");
-            accountXml.setAttributeNode(id);
-            id.setValue(String.valueOf(lastId));
+            setAttributeValue(accountXml, "Id", String.valueOf(result));
+            createAttribute(accountXml, "DateRegister", new Date().toString());
+            
+            saveDatabase(_doc, _dataPath);
         }
+        
+        return result;
+    }
+    
+    public boolean delete(String fBUserId) throws XPathExpressionException, TransformerException
+    {
+        boolean result = false;
+        
+        NodeList exists = getNodes("/AccountDatabase/Account[@FacebookUserId=" + fBUserId + "]", _root);
+        if(exists.getLength() > 0)
+        {
+            for (int i=0; i<exists.getLength(); i++) {
+                _root.removeChild(exists.item(i));
+            }
+        }
+        
+        saveDatabase(_doc, _dataPath);
+        
+        return result;
+    }
+    
+    public boolean update(String fBUserId, Account newData) throws XPathExpressionException, TransformerException
+    {
+        boolean result = false;
+        
+        NodeList exists = getNodes("/AccountDatabase/Account[@FacebookUserId=" + fBUserId + "]", _root);
+        if(exists.getLength() == 1)
+        {
+            setAttributeValue((Element) exists.item(0), "Name", newData.getFBUser().getName());
+            setAttributeValue((Element) exists.item(0), "Email", newData.getFBUser().getEmail());
+            saveDatabase(_doc, _dataPath);
+        }
+        
+        return result;
+    }
+    
+    public Account fromElement(Element input)
+    {
+        Account result = null;
+        
+        if(input != null)
+        {
+            result = new Account();
+            result.setDateRegister(new Date(input.getAttribute("DateRegister")));
+            result.setEmail(input.getAttribute("Email"));
+            result.setFBUserId("FacebookUserId");
+            result.setId(Integer.parseInt(input.getAttribute("Id")));
+            result.setName(input.getAttribute("Name"));
+        }
+        
+        return result;
+    }
+    
+    public Account getUser(String fBUserId) throws XPathExpressionException
+    {
+        Account result = null;
+        
+        NodeList exists = getNodes("/AccountDatabase/Account", _root);
+        if(exists.getLength() == 1)
+        {
+            result = fromElement((Element) exists.item(0));
+        }
+        
+        return result;
+    }
+    
+    public Account[] getUsers() throws XPathExpressionException
+    {
+        Account[] result = null;
+        
+        NodeList exists = getNodes("/AccountDatabase/Account", _root);
+        if(exists.getLength() > 0)
+        {
+            result = new Account[exists.getLength()];
+            for(int i=0; i<exists.getLength(); i++)
+            {
+                result[i] = fromElement((Element) exists.item(i));
+            }
+        }
+        
+        return result;
+    }
+    
+    public Account[] getLoginUsers() throws XPathExpressionException
+    {
+        Account[] result = null;
+        
+        NodeList exists = getNodes("/AccountLoginDatabase/Account", _loginRoot);
+        if(exists.getLength() > 0)
+        {
+            result = new Account[exists.getLength()];
+            for(int i=0; i<exists.getLength(); i++)
+            {
+                Element id = (Element) exists.item(i);
+                result[i] = getUser(id.getAttribute("FacebookUserId"));
+            }
+        }
+        
+        return result;
+    }
+    
+    public boolean exists(String fBUserId) throws XPathExpressionException
+    {
+        boolean result = false;
+        
+        NodeList exists = getNodes("/AccountDatabase/Account[@FacebookUserId=" + fBUserId + "]", _root);
+        if(exists.getLength() > 0)
+        {
+            result = true;
+        }
+        
+        return result;
+    }
+    
+    public String login(String fBUserId, String accessToken) throws XPathExpressionException, TransformerException
+    {
+        String result = "";
+        
+        if(exists(fBUserId))
+        {
+             NodeList exists = getNodes("/AccountLoginDatabase/Account[@FacebookUserId=" + fBUserId + "]", _loginRoot);
+             Date now = new Date();
+             
+             result = fBUserId + now.toString() + accessToken;
+             
+            if(exists.getLength() == 1)
+            {
+                setAttributeValue((Element) exists.item(0), "DateLogin", now.toString());
+                setAttributeValue((Element) exists.item(0), "LoginToken", result);
+            }
+            else
+            {
+                Element login = _loginDoc.createElement("Account");
+                _loginRoot.appendChild(login);
+                
+                createAttribute(login, "FacebookUserId", fBUserId);
+                createAttribute(login, "DateLogin", now.toString());
+                createAttribute(login, "LoginToken", result);
+            }
+            
+            saveDatabase(_loginDoc, _loginDataPath);
+        }
+        
+        return result;
+    }
+    
+    public void logout(String fBUserId) throws XPathExpressionException
+    {
+        NodeList exists = getNodes("/AccountLoginDatabase/Account[@FacebookUserId=" + fBUserId + "]", _loginRoot);
+        if(exists.getLength() > 0)
+        {
+            for(int i=0; i<exists.getLength(); i++)
+            {
+                _loginRoot.removeChild(exists.item(i));
+            }
+        }
+    }
+    
+    public int createDocument(String id, String name, String fBUserId) throws TransformerException
+    {
+        int result = -1;
+        
+        int lastId = Integer.parseInt(_root.getAttribute("LastDocumentId"));
+        lastId++;
+        result = lastId;
+        _root.setAttribute("LastDocumentId", String.valueOf(lastId));
+
+        Element documentXml = _doc.createElement("Document");
+        _root.appendChild(documentXml);          
+
+        createAttribute(documentXml, "Id", String.valueOf(result));
+        createAttribute(documentXml, "DateCreated", new Date().toString());
+        createAttribute(documentXml, "DocumentId", id);
+        createAttribute(documentXml, "OwnerId", fBUserId);
+        createAttribute(documentXml, "Name", name);
+
+        saveDatabase(_doc, _dataPath);
+        
+        return result;
+    }
+    
+    public boolean deleteDocument(String id) throws XPathExpressionException, TransformerException
+    {
+        boolean result = false;
+        
+        NodeList exists = getNodes("/AccountDatabase/Document[@Id=" + id + "]", _root);
+        if(exists.getLength() > 0)
+        {
+            for (int i=0; i<exists.getLength(); i++) {
+                _root.removeChild(exists.item(i));
+            }
+        }
+        
+        saveDatabase(_doc, _dataPath);
         
         return result;
     }

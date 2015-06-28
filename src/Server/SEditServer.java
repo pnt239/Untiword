@@ -186,9 +186,15 @@ public class SEditServer {
             // they're related to
 
             ServerRequestDQ request = new ServerRequestDQ(input);
-            int targetDocumentID = request.getDocumentID();
-
-            documents.get(targetDocumentID).processRequest(request.toString());
+            if(!request.isCustomRequest())
+            {
+                int targetDocumentID = request.getDocumentID();
+                documents.get(targetDocumentID).processRequest(request.toString());
+            }          
+            else
+            {
+                //Process custom request here
+            }
         }
     }
 

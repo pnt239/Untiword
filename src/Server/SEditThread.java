@@ -1,10 +1,20 @@
 package Server;
 
+import Controller.AccountController.FacebookController;
+import Model.Account.AccountLoginViewModel;
+import Server.Business.AccountBlo;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
+import libraryclasses.CustomRequest;
+import org.xml.sax.SAXException;
 
 /**
  * The SEditThread class represents a connection to an individual client. It
@@ -95,9 +105,9 @@ public class SEditThread extends Thread {
             // Send hello message:
             /* HELLO|USER_ID */
             out.println("HELLO|" + userID);
-
-            for (String line = in.readLine(); line != null; line = in
-                    .readLine()) {
+            
+            for (String line = in.readLine(); line != null; line = in.readLine()) 
+            {
                 if (line != null) {
                     if (line.equals("BYE")) {
                         System.out.println("Disconnecting user");
@@ -105,11 +115,49 @@ public class SEditThread extends Thread {
                         server.removeUser(this);
                         break;
                     }
+                    else if(line.indexOf("CUSTOM_REQUEST/AUTHORIZE") == 0) 
+                    {
+                        AccountLoginViewModel model = new AccountLoginViewModel(line);
+                        
+                        CustomRequest request = new CustomRequest(4);
+                        request.setAction("AUTHORIZE");                       
+                        request.setValue("applicationId", model.getApplicationUserId());
+                        request.setValue("loginType", model.getLoginType());
+                        request.setValue("accessToken", model.getAccessToken());
+                        
+                        if(FacebookController.getInstance().getUser(model.getAccessToken()) != null)
+                        {
+                            System.out.println("User id" + userID + " was login");    
+                            try
+                            {
+                                AccountBlo.getInstance().login(model.getAccessToken());
+                                request.setValue("result", "success");      
+                                System.out.println();
+                            }
+                            catch (ParserConfigurationException | SAXException | IOException | TransformerException | XPathExpressionException e)
+                            {
+                                System.out.println(e.toString());
+                            }                                                
+                        }
+                        else
+                        {
+                            request.setValue("result", "failed");
+                        }
+                        
+                        this.sendMessage(request.toString());
+                    }
+                    else if(line.startsWith("CUSTOM_REQUEST/LOGOUT"))
+                    {
+                        CustomRequest request = new CustomRequest(line);
+                        try {
+                            AccountBlo.getInstance().logout(request.getValue("accessToken"));
+                        } catch (ParserConfigurationException | SAXException | TransformerException | XPathExpressionException ex) {
+                            System.out.println(ex.toString());
+                        }
+                    }
                 }
 
-                System.out.println("Incoming message from " + userID + ": "
-                        + line);
-
+                System.out.println("Incoming message from " + userID + ": " + line);
 
                 // only one thread can send a request at a time, others
                 // have to wait

@@ -1,5 +1,7 @@
 package Model;
 
+import libraryclasses.CustomRequest;
+
 /**
  * ServerRequestDQ represents an insert/delete request sent to or
  * received from the server. String->ServerRequestDQ constructor is provided
@@ -24,7 +26,13 @@ public class ServerRequestDQ {
     private int end;
     
     private String content;
-
+    
+    private boolean _customRequest;
+    public boolean isCustomRequest()
+    {
+        return _customRequest;
+    }
+    
     /** 
      * Parses a server request passed in in its String representation
      * and creates a new ServerRequestDQ object
@@ -37,31 +45,49 @@ public class ServerRequestDQ {
         if(requestText == null || requestText.equals("")) {
             throw new RuntimeException("Invalid request: empty or null");
         }
-        String[] elements = requestText.split("\\|");
         
-        if(elements.length != 8) {
-            throw new RuntimeException("Invalid request: wrong number of elements");
+        if(requestText.startsWith("CUSTOM_REQUEST"))
+        {
+            this._customRequest = true;
+            
+            CustomRequest request = new CustomRequest(requestText);
+            this.userID = request.getValue("applicationId");           
+            
+            this.requestNumber = 0;
+            this.documentID = 0;
+            this.action = "";
+            this.beginning = 0;
+            this.end = 0;
+            this.content = "";
+            this.versionID = 0;
         }
+        else
+        {
+            String[] elements = requestText.split("\\|");
         
-        this.userID = elements[0];
-        this.requestNumber = Integer.valueOf(elements[1]);
-        this.documentID = Integer.valueOf(elements[2]);
-        
-        this.action = elements[3];
-        this.beginning = Integer.valueOf(elements[4]);
-        this.end = Integer.valueOf(elements[5]);
-        this.content = elements[6];
-        
-        this.versionID = Integer.valueOf(elements[7]);    
-        
-        if(requestNumber < 0 || beginning < 0 || end < 0 || versionID < 0) {
-            throw new RuntimeException("Invalid request: negative numeral");
-        }
-        
-        if(!(action.equals("INSERT") || action.equals("DELETE"))) {
-            throw new RuntimeException("Invalid request: unrecognized action");
-        }
-        
+            if(elements.length != 8) {
+                throw new RuntimeException("Invalid request: wrong number of elements");
+            }
+
+            this.userID = elements[0];
+            this.requestNumber = Integer.valueOf(elements[1]);
+            this.documentID = Integer.valueOf(elements[2]);
+
+            this.action = elements[3];
+            this.beginning = Integer.valueOf(elements[4]);
+            this.end = Integer.valueOf(elements[5]);
+            this.content = elements[6];
+
+            this.versionID = Integer.valueOf(elements[7]);    
+
+            if(requestNumber < 0 || beginning < 0 || end < 0 || versionID < 0) {
+                throw new RuntimeException("Invalid request: negative numeral");
+            }
+
+            if(!(action.equals("INSERT") || action.equals("DELETE"))) {
+                throw new RuntimeException("Invalid request: unrecognized action");
+            }
+        }      
     }
     
     /**
@@ -71,6 +97,7 @@ public class ServerRequestDQ {
      * @param newVersionID - the new versionID
      */
     public ServerRequestDQ(ServerRequestDQ request, int newVersionID) {
+        this._customRequest = request._customRequest;
         this.userID = request.userID;
         this.requestNumber = request.requestNumber;
         this.documentID = request.documentID;
@@ -101,8 +128,8 @@ public class ServerRequestDQ {
      * 
      * @param previous - update to be applied
      */
-    public synchronized void applyUpdate(ServerRequestDQ previous) {
-        
+    public synchronized void applyUpdate(ServerRequestDQ previous) 
+    {           
         // apply INSERT to INSERT
         if(previous.getAction().equals("INSERT") && this.getAction().equals("INSERT")) {
             // inserting in front of an insert
