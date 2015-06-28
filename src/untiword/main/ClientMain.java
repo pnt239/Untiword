@@ -7,7 +7,6 @@ package untiword.main;
 
 import com.alee.laf.WebLookAndFeel;
 import javax.swing.SwingUtilities;
-import untiword.gui.client.DocumentGui;
 import untiword.gui.client.UWGuiNew;
 import untiword.gui.client.WordGui;
 

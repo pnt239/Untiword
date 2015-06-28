@@ -5,7 +5,10 @@
  */
 package untiword.components;
 
+import Controller.DocumentContentListener;
+import View.Editor;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -19,6 +22,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
@@ -35,17 +39,34 @@ public class UWEditor extends JScrollPane implements ActionListener {
 
     private UWRuler jRuler;
     private UWEditorPane _editor;
+    private static final long serialVersionUID = 1L;
+    private final int docNum;
+    private String docName;
+    private DocumentListener listener;
 
     @Override
     public void actionPerformed(ActionEvent e) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public UWEditor() {
+    public UWEditor(final int docNum, String docName, final Editor editor) {
         //super(new UWEditorPane(), ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         super(new UWEditorPane());
+        this.docNum = docNum;
+        this.docName = docName;
+        listener = new DocumentContentListener(docNum, editor);
+        
 
         init();
+        
+        _editor.getDocument().addDocumentListener(listener);
+    }
+    
+    public UWEditorPane getTextPane(){
+        return _editor;
+    }
+    public int getNum(){
+        return docNum;
     }
 
     private void init() {
@@ -62,7 +83,10 @@ public class UWEditor extends JScrollPane implements ActionListener {
         //showFeatures();
         
         // Ruler
-        jRuler = new UWRuler();
+        jRuler = new UWRuler((DocxDocument)_editor.getDocument());
+        jRuler.setMaximumSize(new Dimension(0, 15));
+        jRuler.setMinimumSize(new Dimension(0, 15));
+        jRuler.setPreferredSize(new Dimension(0, 15));
         super.setColumnHeaderView(jRuler);
     }
 

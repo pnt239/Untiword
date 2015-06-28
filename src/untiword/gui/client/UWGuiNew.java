@@ -55,6 +55,8 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import org.eclipse.swt.internal.win32.OS;
+import untiword.utils.Resources;
 import untiword.components.UWEditor;
 
 /**
@@ -153,6 +155,8 @@ public class UWGuiNew extends javax.swing.JFrame {
     private WebButton incIndTbButton;
     private WebButton clearTbButton;
     private WebDocumentPane docmentPane;
+    
+    private Resources resources;
 
     private String Server;
     private String Po;
@@ -166,6 +170,7 @@ public class UWGuiNew extends javax.swing.JFrame {
 
     private void initComponents() {
         // Init variable
+        resources = new Resources();
         bottomPane = new WebPanel();
         breadcrumb = new WebBreadcrumb(true);
         loginBreadcrumb = new WebBreadcrumbToggleButton("Login");
@@ -354,7 +359,7 @@ public class UWGuiNew extends javax.swing.JFrame {
 
         editMenu = new WebMenu("Edit");
 
-        undoMenuItem = new WebMenuItem("Undo");
+        undoMenuItem = new WebMenuItem("Undo", resources.loadIcon("resources/edit_undo.png"));
         editMenu.add(undoMenuItem);
 
         redoMenuItem = new WebMenuItem("Redo");
@@ -612,9 +617,9 @@ public class UWGuiNew extends javax.swing.JFrame {
         docmentPane = new WebDocumentPane();
         docmentPane.setUndecorated(false);
 
-        UWEditor editor = new UWEditor();
-        docmentPane.openDocument(new DocumentData("id", "title", editor));
-        editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
+//        UWEditor editor = new UWEditor();
+//        docmentPane.openDocument(new DocumentData("id", "title", editor));
+//        editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
 
         panel.add(editorTabPan, java.awt.BorderLayout.CENTER);
 
@@ -655,6 +660,15 @@ public class UWGuiNew extends javax.swing.JFrame {
 
                                                 CardLayout cl = (CardLayout) (centerPane.getLayout());
                                                 cl.show(centerPane, "OpenCard");
+                                            }
+                                        };
+                                        mainEditor.docListener = new DocumentsListener() {
+
+                                            @Override
+                                            public void getUWPanel(UWEditor editor) {
+                                                editBreadcrumb.setSelected(true);
+                                                docmentPane.openDocument(new DocumentData("id", "title", editor));
+                                                editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
                                             }
                                         };
                                     } catch (IOException ex) {

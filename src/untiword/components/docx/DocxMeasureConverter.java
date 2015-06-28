@@ -31,7 +31,7 @@ public class DocxMeasureConverter {
         return (int)(dxaToInch(dxa) * (float)getDPI());
     }
     
-    protected static int getDPI() {
+    public static int getDPI() {
           return GraphicsEnvironment.isHeadless() ? 96 :
                     Toolkit.getDefaultToolkit().getScreenResolution();
     }
