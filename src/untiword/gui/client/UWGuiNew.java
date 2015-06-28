@@ -677,8 +677,8 @@ public class UWGuiNew extends javax.swing.JFrame {
                                     loginFBbtn.setText("Log in as " + _fBUser.getName());
 
                                     isConnect = true;
-                                }
-
+                                    mainEditor.authorize(_fBUser.getAccessToken());
+                                }                                                          
                             }
                         }
                     }

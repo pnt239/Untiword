@@ -30,6 +30,7 @@ import Model.ServerRequestDQ;
 import Model.UserDQ;
 import com.alee.laf.optionpane.WebOptionPane;
 import com.alee.laf.panel.WebPanel;
+import libraryclasses.CustomRequest;
 import untiword.components.UWEditor;
 import untiword.gui.client.DocumentsListener;
 
@@ -68,6 +69,42 @@ public class Editor extends JFrame {
     private HashMap<Integer, UWEditor> docIDtoDocPanel;
 
     public DocumentsListener docListener;
+    
+    private EditorEventListener _loginEventListener;
+    public EditorEventListener getEditorEventListener()
+    {
+        return _loginEventListener;
+    }
+    
+    public void setEditorEventListener(EditorEventListener value)
+    {
+        _loginEventListener = value;
+    }
+    
+    public void authorize(String accessToken)
+    {
+        CustomRequest request = new CustomRequest(3);
+            request.setAction("AUTHORIZE");
+            request.setValue("applicationId", user.getUserID());
+            request.setValue("loginType", "facebook");
+            request.setValue("accessToken", accessToken);
+            this.sendMessage(request.toString());
+    }
+    
+    private void createNewDocPanel()
+    {
+        tabbedPane.add("Open/Create", new NewDocPanel(this));
+
+
+        GroupLayout layout = new GroupLayout(getContentPane());
+        setLayout(layout);
+
+        // get some margins around components by default
+        layout.setAutoCreateContainerGaps(true);
+        layout.setAutoCreateGaps(true);
+        layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(tabbedPane));
+        layout.setVerticalGroup(layout.createSequentialGroup().addComponent(tabbedPane));
+    }
 
     /**
      * Creates new Editor object with a tabbed pane, opens a message handling
@@ -76,8 +113,8 @@ public class Editor extends JFrame {
      * @throws UnknownHostException
      * @throws IOException
      */
-    public Editor(String server, String port) throws UnknownHostException, IOException {
-
+    public Editor(String server, String port) throws UnknownHostException, IOException 
+    {        
         docIDtoDocPanel = new HashMap<Integer, UWEditor>();
 
         showGreetingDialog(server, port);
@@ -109,21 +146,21 @@ public class Editor extends JFrame {
             }
         });
 
-        tabbedPane.add("Open/Create", new NewDocPanel(this));
-
-
-        GroupLayout layout = new GroupLayout(getContentPane());
-        setLayout(layout);
-
-        // get some margins around components by default
-        layout.setAutoCreateContainerGaps(true);
-        layout.setAutoCreateGaps(true);
-
-        layout.setHorizontalGroup(layout.createParallelGroup(
-                GroupLayout.Alignment.LEADING).addComponent(tabbedPane));
-
-        layout.setVerticalGroup(layout.createSequentialGroup().addComponent(
-                tabbedPane));
+//        tabbedPane.add("Open/Create", new NewDocPanel(this));
+//
+//
+//        GroupLayout layout = new GroupLayout(getContentPane());
+//        setLayout(layout);
+//
+//        // get some margins around components by default
+//        layout.setAutoCreateContainerGaps(true);
+//        layout.setAutoCreateGaps(true);
+//
+//        layout.setHorizontalGroup(layout.createParallelGroup(
+//                GroupLayout.Alignment.LEADING).addComponent(tabbedPane));
+//
+//        layout.setVerticalGroup(layout.createSequentialGroup().addComponent(
+//                tabbedPane));
 
     }
 
@@ -153,7 +190,7 @@ public class Editor extends JFrame {
                             "Sorry, the server has encountered unexpected error. Please try again.");
             System.exit(0);
         } else {
-            setUser(new UserDQ(elements[1]));
+            setUser(new UserDQ(elements[1]));          
         }
     }
 
@@ -241,7 +278,15 @@ public class Editor extends JFrame {
 
             }
 
-        } else {
+        }
+        else if(line.startsWith("CUSTOM_REQUEST/AUTHORIZE")) {
+            CustomRequest request = new CustomRequest(line);
+            if(request.getValue("result").equals("success"))
+            {
+                createNewDocPanel();
+            }          
+        }
+        else {
             this.getUser().pushRequest(line);
             String[] splitString = line.split("\\|");
 
@@ -286,13 +331,20 @@ public class Editor extends JFrame {
                 ignoreNext = 0;
             }
             panelToUpdate.getTextPane().setText(content);
-
-            if (newSelection.getAction().equals("INSERT")) {
+            
+            if(!newSelection.isCustomRequest())
+            {
+                if (newSelection.getAction().equals("INSERT")) {
                 tempPane.setCaretPosition(newSelection.getBeginning());
-            } else {
-                tempPane.setSelectionStart(newSelection.getBeginning());
-                tempPane.setSelectionEnd(newSelection.getEnd());
+                } else {
+                    tempPane.setSelectionStart(newSelection.getBeginning());
+                    tempPane.setSelectionEnd(newSelection.getEnd());
+                }
             }
+            else
+            {
+                //Process custom request here
+            }        
         }
     }
 
