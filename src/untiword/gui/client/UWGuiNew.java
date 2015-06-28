@@ -148,8 +148,10 @@ public class UWGuiNew  extends javax.swing.JFrame {
         
         centerPane.add(loginPane, "LoginCard");
         
+        /* Create GUI for open here */
         centerPane.add(openPane, "OpenCard");
         
+        /* Create GUI for edit here */
         centerPane.add(editPane, "EditCard");
         
         getContentPane().add(centerPane, java.awt.BorderLayout.CENTER);
