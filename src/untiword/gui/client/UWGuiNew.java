@@ -617,9 +617,9 @@ public class UWGuiNew extends javax.swing.JFrame {
         docmentPane = new WebDocumentPane();
         docmentPane.setUndecorated(false);
 
-        UWEditor editor = new UWEditor();
-        docmentPane.openDocument(new DocumentData("id", "title", editor));
-        editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
+//        UWEditor editor = new UWEditor();
+//        docmentPane.openDocument(new DocumentData("id", "title", editor));
+//        editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
 
         panel.add(editorTabPan, java.awt.BorderLayout.CENTER);
 
@@ -660,6 +660,15 @@ public class UWGuiNew extends javax.swing.JFrame {
 
                                                 CardLayout cl = (CardLayout) (centerPane.getLayout());
                                                 cl.show(centerPane, "OpenCard");
+                                            }
+                                        };
+                                        mainEditor.docListener = new DocumentsListener() {
+
+                                            @Override
+                                            public void getUWPanel(UWEditor editor) {
+                                                editBreadcrumb.setSelected(true);
+                                                docmentPane.openDocument(new DocumentData("id", "title", editor));
+                                                editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
                                             }
                                         };
                                     } catch (IOException ex) {

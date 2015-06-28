@@ -30,7 +30,9 @@ import Model.ServerRequestDQ;
 import Model.UserDQ;
 import com.alee.laf.optionpane.WebOptionPane;
 import com.alee.laf.panel.WebPanel;
-import untiword.gui.client.DocumentGui;
+import untiword.components.UWEditor;
+import untiword.gui.client.DocumentsListener;
+
 import untiword.gui.client.EditorListener;
 import untiword.gui.client.WordGui;
 
@@ -63,8 +65,9 @@ public class Editor extends JFrame {
     private MessageHandlingThread MHT;
     private int ignoreNext = 0;
     private JTabbedPane tabbedPane;
-    private HashMap<Integer, WordGui> docIDtoDocPanel;
+    private HashMap<Integer, UWEditor> docIDtoDocPanel;
 
+    public DocumentsListener docListener;
 
     /**
      * Creates new Editor object with a tabbed pane, opens a message handling
@@ -75,7 +78,7 @@ public class Editor extends JFrame {
      */
     public Editor(String server, String port) throws UnknownHostException, IOException {
 
-        docIDtoDocPanel = new HashMap<Integer, WordGui>();
+        docIDtoDocPanel = new HashMap<Integer, UWEditor>();
 
         showGreetingDialog(server, port);
 
@@ -184,7 +187,7 @@ public class Editor extends JFrame {
 
             else if (reqType.equals("DOCRENAMED")) {
                 String[] broken = splitString[2].split("~");
-                WordGui docToRename = docIDtoDocPanel.get(Integer
+                UWEditor docToRename = docIDtoDocPanel.get(Integer
                         .parseInt(broken[0]));
                 int index = tabbedPane.indexOfComponent(docToRename);
                 tabbedPane.setTitleAt(index, broken[1]);
@@ -219,12 +222,10 @@ public class Editor extends JFrame {
                 String[] splitDoc = splitString[2].split("~");
                 getUser().addDocument(Integer.parseInt(splitDoc[0]));
                 
-                WordGui newDocWindow = new WordGui(Integer.parseInt(splitDoc[0])
+                UWEditor newDocWindow = new UWEditor(Integer.parseInt(splitDoc[0])
                         , splitDoc[1], this);
-                newDocWindow.setLocationRelativeTo(null);
                 newDocWindow.setVisible(true);
-                newDocWindow.setTitle(splitDoc[1]);
-                
+                docListener.getUWPanel(newDocWindow);
 //                DocPanel newDocWindow = new DocPanel(
 //                        Integer.parseInt(splitDoc[0]), splitDoc[1], this);
                this.docIDtoDocPanel.put(newDocWindow.getNum(), newDocWindow);
@@ -260,7 +261,7 @@ public class Editor extends JFrame {
             this.ignoreNext = 2;
 
             int docId = Integer.parseInt(docID);
-            WordGui panelToUpdate = docIDtoDocPanel.get(docId);
+            UWEditor panelToUpdate = docIDtoDocPanel.get(docId);
             JTextPane tempPane = panelToUpdate.getTextPane();
 
             ServerRequestDQ newSelection = null;
@@ -469,7 +470,7 @@ public class Editor extends JFrame {
      * Getter for the hash map from docID to the panel that holds the document
      * @return docIDtoDocPanel
      */
-    public HashMap<Integer, WordGui> getDocIDtoDocPanel() {
+    public HashMap<Integer, UWEditor> getDocIDtoDocPanel() {
         return docIDtoDocPanel;
     }
 
@@ -477,7 +478,7 @@ public class Editor extends JFrame {
      * Setter for the above mentioned hashmap
      * @param docIDtoDocPanel
      */
-    public void setDocIDtoDocPanel(HashMap<Integer, WordGui> docIDtoDocPanel) {
+    public void setDocIDtoDocPanel(HashMap<Integer, UWEditor> docIDtoDocPanel) {
         this.docIDtoDocPanel = docIDtoDocPanel;
     }
 }
