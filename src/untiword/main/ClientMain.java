@@ -8,6 +8,7 @@ package untiword.main;
 import com.alee.laf.WebLookAndFeel;
 import javax.swing.SwingUtilities;
 import untiword.gui.client.DocumentGui;
+import untiword.gui.client.UWGuiNew;
 import untiword.gui.client.WordGui;
 
 /**
@@ -28,7 +29,7 @@ public class ClientMain {
                 //WebLookAndFeel.setDecorateFrames ( true );
 
                 // Initializing editor dialog
-                DocumentGui gui = new DocumentGui();
+                UWGuiNew gui = new UWGuiNew();
                 
                 gui.setLocationRelativeTo(null);
                 gui.setVisible(true);
