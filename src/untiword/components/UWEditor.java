@@ -6,6 +6,7 @@
 package untiword.components;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -19,6 +20,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
@@ -62,7 +65,10 @@ public class UWEditor extends JScrollPane implements ActionListener {
         //showFeatures();
         
         // Ruler
-        jRuler = new UWRuler();
+        jRuler = new UWRuler((DocxDocument)_editor.getDocument());
+        jRuler.setMaximumSize(new Dimension(0, 15));
+        jRuler.setMinimumSize(new Dimension(0, 15));
+        jRuler.setPreferredSize(new Dimension(0, 15));
         super.setColumnHeaderView(jRuler);
     }
 
