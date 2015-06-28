@@ -8,6 +8,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import View.Editor;
+import untiword.components.UWEditor;
 import untiword.gui.client.WordGui;
 
 /**
@@ -94,7 +95,7 @@ public class DocumentContentListener implements DocumentListener {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
 
-                            WordGui pan = editor.getDocIDtoDocPanel().get(
+                            UWEditor pan = editor.getDocIDtoDocPanel().get(
                                     docNum);
                             pan.getTextPane().setCaretPosition(0);
                             editor.updateView(docNum + "");

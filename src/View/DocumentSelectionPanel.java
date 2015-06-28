@@ -29,6 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import untiword.components.UWEditor;
 import untiword.gui.client.WordGui;
 
 /**
@@ -215,9 +216,8 @@ public class DocumentSelectionPanel {
         }
 
         editor.getUser().addDocument(num);
-        WordGui newDoc = new WordGui(num, name, editor);
-        newDoc.setLocationRelativeTo(null);
-        newDoc.setTitle(name);
+        UWEditor newDoc = new UWEditor(num, name, editor);
+        editor.docListener.getUWPanel(newDoc);
         newDoc.setVisible(true);
 //        editor.getTabbedPane().add(name, newDoc);
         editor.getDocIDtoDocPanel().put(num, newDoc);
