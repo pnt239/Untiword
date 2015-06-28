@@ -244,10 +244,10 @@ public class UWGuiNew extends javax.swing.JFrame {
                                             openPane.revalidate();
                                             openPane.repaint();
                                             
-                                            loginPane.add(filler3);
+                                            openPane.add(filler3);
                                             
                                             openBreadcrumb.setSelected(true); 
-                                            loginPane.add(filler4);
+                                            openPane.add(filler4);
                                               
                                             CardLayout cl = (CardLayout) (centerPane.getLayout());
                                             cl.show(centerPane, "OpenCard");
