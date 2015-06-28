@@ -29,6 +29,7 @@ import com.alee.global.StyleConstants;
 import com.alee.laf.WebLookAndFeel;
 import com.alee.laf.button.WebButton;
 import com.alee.laf.label.WebLabel;
+import com.alee.laf.optionpane.WebOptionPane;
 import com.alee.laf.panel.WebPanel;
 import com.alee.laf.text.WebTextField;
 import com.alee.utils.SwingUtils;
@@ -92,6 +93,7 @@ public class UWGui {
     private static WebBreadcrumb breadcrumb1;
     
     public UWGui() {
+        WebLookAndFeel.install();
         first.setSelected(true);
         setupGui(createConnectForm());
     }
@@ -289,6 +291,7 @@ public class UWGui {
                     }
                 } else{
                     
+                    WebOptionPane.showMessageDialog ( null, "Please Login first", "Message", WebOptionPane.INFORMATION_MESSAGE );
                 }
             }
 

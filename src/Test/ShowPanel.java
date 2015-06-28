@@ -8,15 +8,22 @@ package Test;
 import com.alee.extended.breadcrumb.WebBreadcrumb;
 import com.alee.extended.breadcrumb.WebBreadcrumbToggleButton;
 import com.alee.extended.panel.GroupPanel;
+import com.alee.extended.panel.GroupingType;
+import com.alee.extended.tab.DocumentData;
+import com.alee.extended.tab.WebDocumentPane;
 import com.alee.global.StyleConstants;
+import com.alee.laf.WebLookAndFeel;
 import com.alee.laf.button.WebButton;
 import com.alee.laf.label.WebLabel;
 import com.alee.laf.list.WebList;
 import com.alee.laf.panel.WebPanel;
 import com.alee.laf.scroll.WebScrollPane;
 import com.alee.laf.text.WebTextField;
+import com.alee.laf.text.WebTextPane;
 import com.alee.utils.SwingUtils;
+import com.alee.utils.TextUtils;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -35,7 +42,7 @@ public class ShowPanel {
 
     private static JPanel bottomPanel;
     private static JPanel mainPanel;
-    private static WebPanel contentPanel;
+    private static GroupPanel contentPanel;
 
     static void setup() {
         JFrame jFrame = new JFrame();
@@ -46,7 +53,7 @@ public class ShowPanel {
         bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(steps, BorderLayout.LINE_START);
 
-        contentPanel = getPreview();
+        contentPanel = (GroupPanel) getPreview();
 
         mainPanel = new JPanel(new BorderLayout());
         mainPanel.add(contentPanel, BorderLayout.CENTER);
@@ -64,6 +71,7 @@ public class ShowPanel {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                WebLookAndFeel.install();
                 setup();
             }
         });
@@ -108,46 +116,61 @@ public class ShowPanel {
         }
     };
 
-    public static WebPanel getPreview() {
-        // Editable list
-        WebPanel ret = new WebPanel(true);
-        ret.setUndecorated(false);
-        ret.setLayout(new BorderLayout());
-        ret.setMargin(50);
-        ret.setRound(StyleConstants.largeRound);
+    public static Component getPreview ()
+    {
+        final WebLabel title = new WebLabel ( "You can drag, close and split tabs in this document pane" );
 
-        WebList editableList = new WebList(createSampleData());
-        editableList.setVisibleRowCount(10);
-        editableList.setSelectedIndex(0);
-        editableList.setEditable(true);
-        WebScrollPane list = new WebScrollPane(editableList);
-        list.setMaximumSize(new Dimension(200, 600));
-        final WebPanel panel1 = new WebPanel(true);
-        panel1.setPaintFocus(true);
-        panel1.setMargin(10);
-        panel1.add(new WebLabel("Select From List Files", WebLabel.CENTER), BorderLayout.NORTH);
-        panel1.add(list, BorderLayout.CENTER);
+        final WebDocumentPane pane = new WebDocumentPane ();
+        pane.setUndecorated ( false );
+        addDocuments ( pane );
 
-        final WebPanel panel2 = new WebPanel(true);
-        panel2.setPaintFocus(true);
-        panel2.setMargin(10);
-        panel2.add(new WebLabel("Create New Doc", WebLabel.CENTER), BorderLayout.NORTH);
-        
-        WebTextField txtFileName = new WebTextField(15);
-        txtFileName.setHideInputPromptOnFocus(false);
-        txtFileName.setInputPrompt("Enter text...");
-        txtFileName.setInputPromptFont(txtFileName.getFont().deriveFont(Font.ITALIC));
-        txtFileName.setMargin(5);        
-        
-        panel2.add(new WebButton("Create"), BorderLayout.SOUTH);
-        panel2.add(txtFileName,BorderLayout.CENTER);
+        final WebButton add = new WebButton ( new ActionListener ()
+        {
+            @Override
+            public void actionPerformed ( final ActionEvent e )
+            {
+                addDocuments ( pane );
+            }
+        } );
+        final WebButton clear = new WebButton (  new ActionListener ()
+        {
+            @Override
+            public void actionPerformed ( final ActionEvent e )
+            {
+                pane.closeAll ();
+            }
+        } );
+        final WebButton restore = new WebButton ( new ActionListener ()
+        {
+            @Override
+            public void actionPerformed ( final ActionEvent e )
+            {
+                pane.closeAll ();
+                addDocuments ( pane );
+            }
+        } );
 
-        ret.add(new GroupPanel(4, false, panel1, new WebLabel("OR", WebLabel.CENTER), panel2));
-        return ret;
+        final GroupPanel titlePanel = new GroupPanel ( GroupingType.fillFirst, 5, title, add, clear, restore );
+        return new GroupPanel ( GroupingType.fillLast, 10, false, titlePanel, pane ).setMargin ( 10 );
     }
 
-    private static String[] createSampleData() {
-        return new String[]{"Editable element 1", "Editable element 2", "Editable element 3", "Editable element 4", "Editable element 5",
-            "Editable element 6"};
+    /**
+     * Adds a few documents into the document pane.
+     *
+     * @param pane document pane
+     */
+    static void addDocuments ( final WebDocumentPane pane )
+    {
+        JFrame temp = new JFrame();
+        temp.add(new WebLabel ("AAAAAAAAAAAAAAAAAA"));
+        temp.add(new WebTextPane());
+        WebPanel a = new WebPanel().add(temp);
+        pane.openDocument ( new DocumentData ( TextUtils.generateId (),  "Excel doc" , a  ) );
+       pane.openDocument ( new DocumentData ( TextUtils.generateId (),  "Excel doc" , new WebLabel () ) );
+       pane.openDocument ( new DocumentData ( TextUtils.generateId (),  "Excel doc" , new WebLabel () ) );
+       pane.openDocument ( new DocumentData ( TextUtils.generateId (),  "Excel doc" , new WebLabel () ) );
+       pane.openDocument ( new DocumentData ( TextUtils.generateId (),  "Excel doc" , new WebLabel () ) );
+       
+       
     }
 }
