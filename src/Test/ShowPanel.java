@@ -164,7 +164,7 @@ public class ShowPanel {
         JFrame temp = new JFrame();
         temp.add(new WebLabel ("AAAAAAAAAAAAAAAAAA"));
         temp.add(new WebTextPane());
-        WebPanel a = new WebPanel().add(temp);
+        WebPanel a = new WebPanel();//.add(temp);
         pane.openDocument ( new DocumentData ( TextUtils.generateId (),  "Excel doc" , a  ) );
        pane.openDocument ( new DocumentData ( TextUtils.generateId (),  "Excel doc" , new WebLabel () ) );
        pane.openDocument ( new DocumentData ( TextUtils.generateId (),  "Excel doc" , new WebLabel () ) );
