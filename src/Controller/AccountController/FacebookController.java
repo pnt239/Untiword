@@ -12,8 +12,6 @@ import com.restfb.Version;
 import com.restfb.scope.ScopeBuilder;
 import com.restfb.scope.UserDataPermissions;
 import com.restfb.types.User;
-import facebook4j.internal.org.json.JSONException;
-import facebook4j.internal.org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -118,7 +116,7 @@ public class FacebookController
         String fbGraphUrl = "";
         try 
         {
-            fbGraphUrl = "https://graph.facebook.com/oauth/access_token?" 
+            fbGraphUrl = "https://www.graph.facebook.com/oauth/access_token?" 
                     + "client_id=" + _appId 
                     + "&redirect_uri=" + URLEncoder.encode(_redirectUri, "UTF-8")
                     + "&client_secret=" + _appSecret 
@@ -175,7 +173,7 @@ public class FacebookController
         String graph = null;
         try 
         {
-            String g = "https://graph.facebook.com/me?" + userAccessToken;
+            String g = "https://www.graph.facebook.com/me?" + userAccessToken;
             URL u = new URL(g);
             URLConnection c = u.openConnection();
             StringBuffer b;
@@ -199,20 +197,20 @@ public class FacebookController
     public Map<String, String> getGraphData(String fbGraph) 
     {
         Map<String, String> fbProfile = new HashMap<>();
-        try 
-        {
-            JSONObject json = new JSONObject(fbGraph);
-            fbProfile.put("id", json.getString("id"));
-            fbProfile.put("first_name", json.getString("first_name"));
-            if (json.has("email"))
-                fbProfile.put("email", json.getString("email"));
-            if (json.has("gender"))
-                fbProfile.put("gender", json.getString("gender"));
-        }
-        catch (JSONException e)
-        {
-            throw new RuntimeException("ERROR in parsing FB graph data. " + e);
-        }
+//        try 
+//        {
+//            JSONObject json = new JSONObject(fbGraph);
+//            fbProfile.put("id", json.getString("id"));
+//            fbProfile.put("first_name", json.getString("first_name"));
+//            if (json.has("email"))
+//                fbProfile.put("email", json.getString("email"));
+//            if (json.has("gender"))
+//                fbProfile.put("gender", json.getString("gender"));
+//        }
+//        catch (JSONException e)
+//        {
+//            throw new RuntimeException("ERROR in parsing FB graph data. " + e);
+//        }
         return fbProfile;
     }
     

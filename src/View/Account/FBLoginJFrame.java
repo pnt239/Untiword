@@ -5,21 +5,10 @@
  */
 package View.Account;
 
-import View.Account.Browsers.Browser;
-import View.Account.Browsers.BrowserProvider;
 import Controller.AccountController.FacebookController;
 import Model.Account.FacebookUser;
-import chrriis.dj.nativeswing.NativeSwing;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserCommandEvent;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserEvent;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserListener;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserNavigationEvent;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowOpeningEvent;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowWillOpenEvent;
 import java.awt.BorderLayout;
 import java.net.MalformedURLException;
-import org.openide.util.Lookup;
-import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,11 +20,10 @@ public class FBLoginJFrame extends javax.swing.JFrame {
 
     private FBLoginJFrameEventListener _fbBLoginJFrameEventListener;
     private boolean _loginSuccess;
-    private Browser _browser;
+    private SwingFXWebView _webBrowser;
     
     public void close()
     {
-        _browser.dispose();
         this.setVisible(false);
         this.dispose();
     }
@@ -51,19 +39,12 @@ public class FBLoginJFrame extends javax.swing.JFrame {
         
         try
         {
-            String url = _browser.getResourceLocation();
-            String at = FacebookController.getInstance().parseUserAccessTokenUrl(url);
-            user = FacebookController.getInstance().getUser(at);
-//            out.print(url + "\n");
-//            out.print(_browser.getHtmlContent() + "\n");
-//            out.print(at + "\n");
-//            out.print(user.getName() + "\n" + user.getEmail() + "\n");
-//            List<User> friends = _accountController.getFacebookController().getUserFriends(user);
-//            out.print(friends.size());
-//            for(User friend : friends)
-//            {
-//                out.print(friend.getName() + "\n");
-//            }
+            if(_webBrowser != null)
+            {
+                String url = _webBrowser.getUrl();
+                String at = FacebookController.getInstance().parseUserAccessTokenUrl(url);
+                user = FacebookController.getInstance().getUser(at);
+            }       
         }
         catch(Exception e)
         {
@@ -90,60 +71,19 @@ public class FBLoginJFrame extends javax.swing.JFrame {
     
     private void setWebBrowserListener()
     {
-        if(_browser != null)
+        if(_webBrowser != null)
         {
-            WebBrowserListener webBrowserListener = new WebBrowserListener() {
-                
-                @Override
-                public void windowWillOpen(WebBrowserWindowWillOpenEvent wbwwoe) {                   
-                }
-
-                @Override
-                public void windowOpening(WebBrowserWindowOpeningEvent wbwoe) {                    
-                }
-
-                @Override
-                public void windowClosing(WebBrowserEvent wbe) {                 
-                }
-
-                @Override
-                public void locationChanging(WebBrowserNavigationEvent wbne) {
-                }
-
-                @Override
-                public void locationChanged(WebBrowserNavigationEvent wbne) {
-                    if(_browser.getResourceLocation().indexOf("http://localhost") == 0)
+            _webBrowser.setSwingFXWebViewEventListener(() -> {
+                if(_webBrowser.getUrl().contains("access_token"))
+                {
+                    setVisible(false);
+                    _loginSuccess = true;
+                    if(_fbBLoginJFrameEventListener != null)
                     {
-                        setVisible(false);
-                        _loginSuccess = true;
-                        if(_fbBLoginJFrameEventListener != null)
-                        {                        
-                            _fbBLoginJFrameEventListener.loginSuccess();                          
-                        }
-                    }
+                        _fbBLoginJFrameEventListener.loginSuccess();
+                    }            
                 }
-
-                @Override
-                public void locationChangeCanceled(WebBrowserNavigationEvent wbne) {
-                }
-
-                @Override
-                public void loadingProgressChanged(WebBrowserEvent wbe) {
-                }
-
-                @Override
-                public void titleChanged(WebBrowserEvent wbe) {
-                }
-
-                @Override
-                public void statusChanged(WebBrowserEvent wbe) {
-                }
-
-                @Override
-                public void commandReceived(WebBrowserCommandEvent wbce) {
-                }
-            };
-            _browser.getWebBrowser().addWebBrowserListener(webBrowserListener);
+            });
         }
     }
     
@@ -153,22 +93,13 @@ public class FBLoginJFrame extends javax.swing.JFrame {
      */
     public FBLoginJFrame() throws MalformedURLException {
         initComponents();
-        NativeSwing.initialize();
         setLayout(new BorderLayout());
-        BrowserProvider bp = Lookup.getDefault().lookup(BrowserProvider.class);
-        if (bp!=null){
-            _browser = bp.createBrowser();
-            add(_browser.getBrowserComponent(), BorderLayout.CENTER);
-            
+        _webBrowser = new SwingFXWebView(FacebookController.getInstance().getFbUserAccessTokenUrl());
+        if(_webBrowser != null)
+        {
             setWebBrowserListener();
-            _browser.clearSessionCookies();
-            _browser.getWebBrowser().setMenuBarVisible(false);
-            _browser.getWebBrowser().setButtonBarVisible(false);
-            _browser.getWebBrowser().setLocationBarVisible(false);           
-            
-            _browser.browseTo(new URL(FacebookController.getInstance().getFbUserAccessTokenUrl()));
-            //out.print(fc.getFbUserAccessTokenUrl());
-        }
+            getContentPane().add(_webBrowser);
+        }          
     }
 
     /**
@@ -180,7 +111,7 @@ public class FBLoginJFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

@@ -3,13 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package View.Account.Browsers;
+package View.Account;
+
+import java.util.EventListener;
 
 /**
  *
  * @author Lilium Aikia
  */
-public interface BrowserProvider 
+public interface SwingFXWebViewEventListener extends EventListener
 {
-    public Browser createBrowser();
+    public void locationChanged();
 }

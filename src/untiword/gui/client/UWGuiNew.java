@@ -65,7 +65,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import org.eclipse.swt.internal.win32.OS;
+//import org.eclipse.swt.internal.win32.OS;
 import untiword.utils.Resources;
 import untiword.components.UWEditor;
 import untiword.controller.ClientController;
