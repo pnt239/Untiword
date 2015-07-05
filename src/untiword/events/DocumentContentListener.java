@@ -1,4 +1,9 @@
-package Controller;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package untiword.events;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -6,21 +11,18 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
-
-import View.Editor;
 import untiword.components.UWEditor;
-import untiword.gui.client.WordGui;
+import untiword.components.docx.DocxDocument;
+import untiword.controller.ClientController;
 
 /**
- * DocumentContentListener is a custom Document listener that waits for updates
- * in the editor and creates the messages to be sent to the server.
- * 
+ *
+ * @author NThanh
  */
-
 public class DocumentContentListener implements DocumentListener {
 
     final int docNum;
-    final Editor editor;
+    final ClientController clientController;
 
     /**
      * Creates new DocumentContentListener on passed in document 
@@ -28,9 +30,9 @@ public class DocumentContentListener implements DocumentListener {
      * @param docNum document number of document listener listens to
      * @param editor to which the listener belongs
      */
-    public DocumentContentListener(int docNum, Editor editor) {
+    public DocumentContentListener(int docNum, ClientController client) {
         this.docNum = docNum;
-        this.editor = editor;
+        this.clientController = client;
     }
 
     /**
@@ -73,13 +75,15 @@ public class DocumentContentListener implements DocumentListener {
      */
     public void update(DocumentEvent e, EditType action)
             throws BadLocationException {
-        synchronized (editor) {
-            if (editor.getIgnoreNext() > 0) {
-                editor.setIgnoreNext(editor.getIgnoreNext() - 1);
+        synchronized (clientController) {
+            if (clientController.getIgnoreNext() > 0) {
+                clientController.setIgnoreNext(clientController.getIgnoreNext() - 1);
                 return;
             }
 
             Document doc = (Document) e.getDocument();
+            DocxDocument document = (DocxDocument)e.getDocument();
+            
             int offset = e.getOffset();
             int length = e.getLength();
 
@@ -89,31 +93,31 @@ public class DocumentContentListener implements DocumentListener {
                 if (content.contains("|")) {
                     JOptionPane
                             .showMessageDialog(
-                                    editor,
+                                    null,
                                     "Hi Katrina! We were hoping you won't see this... but pipe usage is HIGHLY discouraged.");
 
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
 
-                            UWEditor pan = editor.getDocIDtoDocPanel().get(
+                            UWEditor pan = clientController.getDocIDtoDocPanel().get(
                                     docNum);
                             pan.getTextPane().setCaretPosition(0);
-                            editor.updateView(docNum + "");
+                            clientController.updateView(docNum + "");
                         }
                     });
                     return;
                 }
-                editor.getUser().createRequest(
+                clientController.getUser().createRequest(
                         docNum,
                         "" + action.toString() + "|" + (offset) + "|"
                                 + (offset + length) + "|" + content);
             } else {
-                editor.getUser().createRequest(
+                clientController.getUser().createRequest(
                         docNum,
                         "" + action.toString() + "|" + offset + "|"
                                 + (offset + length) + "|" + "wooo");
             }
-            editor.sendMessage(editor.getUser().pullRequest());
+            clientController.sendMessage(clientController.getUser().pullRequest());
         }
     }
 
@@ -124,5 +128,4 @@ public class DocumentContentListener implements DocumentListener {
     public static enum EditType {
         INSERT, DELETE,
     }
-
 }

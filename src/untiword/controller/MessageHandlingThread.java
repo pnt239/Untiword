@@ -1,12 +1,10 @@
-package Controller;
+package untiword.controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-
 import javax.swing.SwingUtilities;
 
-import View.Editor;
 
 /**
  * The Message Handling Thread's purpose is to listen for messages from the
@@ -19,26 +17,25 @@ import View.Editor;
  */
 public class MessageHandlingThread extends Thread {
 
-    private Editor editor;
-    private BufferedReader in;
+    private final ClientController clientController;
+    private final BufferedReader in;
 
     /**
      * Constructor for the MessageHandlingThread.
      * 
-     * @param editor
-     *            The editor the thread belongs to and will pass server messages
-     *            to.
-     * @param in
-     *            The buffered reader opened by its editor.
+     * @param clientController The client controller the thread belongs to and 
+     *        will pass server messages to.
+     * @param in The buffered reader opened by its editor.
      */
-    public MessageHandlingThread(Editor editor, BufferedReader in) {
-        this.editor = editor;
+    public MessageHandlingThread(ClientController clientController, BufferedReader in) {
+        this.clientController = clientController;
         this.in = in;
     }
 
     /**
      * When run, thread attempts to handle the connection.
      */
+    @Override
     public void run() {
         try {
             handleConnection();
@@ -63,7 +60,7 @@ public class MessageHandlingThread extends Thread {
                     break;
                 }
                 System.out.println(line);
-                this.sendToEditor(line);
+                this.sendToClientControler(line);
             }
         } finally {
             in.close();
@@ -79,11 +76,11 @@ public class MessageHandlingThread extends Thread {
      * @param line
      *            message to be passed to the editor's parser.
      */
-    public void sendToEditor(final String line) {
+    public void sendToClientControler(final String line) {
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
-                    editor.handleLine(line);
+                    clientController.handleLine(line);
                 }
             });
         } catch (InterruptedException e) {

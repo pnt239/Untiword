@@ -35,4 +35,9 @@ public class DocxMeasureConverter {
           return GraphicsEnvironment.isHeadless() ? 96 :
                     Toolkit.getDefaultToolkit().getScreenResolution();
     }
+    
+    public static int pointToPixel(int point) {
+        float inch = point * 1.0F / 72.0F;
+        return Math.round(inch * getDPI());
+    }
 }
