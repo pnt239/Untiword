@@ -55,15 +55,16 @@ public class UWEditor extends JScrollPane implements ActionListener {
         this.docNum = docNum;
         this.docName = docName;
         listener = new DocumentContentListener(docNum, client);
-        
+
         init();
-        _editor.getDocument().addDocumentListener(listener);
+        //_editor.getDocument().addDocumentListener(listener);
     }
-    
-    public UWEditorPane getTextPane(){
+
+    public UWEditorPane getTextPane() {
         return _editor;
     }
-    public int getNum(){
+
+    public int getNum() {
         return docNum;
     }
 
@@ -71,17 +72,17 @@ public class UWEditor extends JScrollPane implements ActionListener {
         // get the text pane
         JViewport v = (JViewport) super.getComponent(0);
         _editor = (UWEditorPane) v.getComponent(0);
-        
+
         try {
-        FileInputStream in=new FileInputStream("thanh_test.docx");
-         _editor.getEditorKit().read(in, _editor.getDocument(), 0);
+            FileInputStream in = new FileInputStream("thanh_test.docx");
+            _editor.getEditorKit().read(in, _editor.getDocument(), 0);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         //showFeatures();
-        
+
         // Ruler
-        jRuler = new UWRuler((DocxDocument)_editor.getDocument());
+        jRuler = new UWRuler((DocxDocument) _editor.getDocument());
         jRuler.setMaximumSize(new Dimension(0, 15));
         jRuler.setMinimumSize(new Dimension(0, 15));
         jRuler.setPreferredSize(new Dimension(0, 15));

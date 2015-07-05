@@ -66,7 +66,7 @@ public class DocxDocument extends DefaultStyledDocument {
      * @param attr The table attributes. (contains border parameters)
      * @param colWidths Widths for each table's column.
      * @param rowHeights heights for each table's row.
-     * @return 
+     * @return
      */
     public Element insertTable(int offset, int rowCount, int colCount, AttributeSet attr, int[] colWidths, int[] rowHeights) {
         Element table = null;
@@ -518,9 +518,9 @@ public class DocxDocument extends DefaultStyledDocument {
      */
     public void setDocumentMargins(PgMar margins) {
         this.docMargins = margins;
-        pageMargins.set(DocxMeasureConverter.dxaToPixel(margins.getTop()), 
-                DocxMeasureConverter.dxaToPixel(margins.getLeft()), 
-                DocxMeasureConverter.dxaToPixel(margins.getBottom()), 
+        pageMargins.set(DocxMeasureConverter.dxaToPixel(margins.getTop()),
+                DocxMeasureConverter.dxaToPixel(margins.getLeft()),
+                DocxMeasureConverter.dxaToPixel(margins.getBottom()),
                 DocxMeasureConverter.dxaToPixel(margins.getRight()));
         refresh();
     }
@@ -536,7 +536,7 @@ public class DocxDocument extends DefaultStyledDocument {
 
     public void setDocumentSize(PgSz size) {
         this.docSize = size;
-        
+
         pageWidth = DocxMeasureConverter.dxaToPixel(size.getW());
         pageHeight = DocxMeasureConverter.dxaToPixel(size.getH());
     }
@@ -545,14 +545,23 @@ public class DocxDocument extends DefaultStyledDocument {
         return docSize;
     }
 
+    @Override
+    public Font getFont(AttributeSet attr) {
+        StyleContext styles = (StyleContext) getAttributeContext();
+        Font font = styles.getFont(attr);
+        float newSize = DocxMeasureConverter.pointToPixel(font.getSize()) * 96.0F / 72.0F;
+        Font newFont = font.deriveFont(25F);
+        return newFont;
+    }
+
     public int getPageWidth() {
         return pageWidth;
     }
-    
+
     public int getPageHeight() {
         return pageHeight;
     }
-    
+
     public MyPageData getPageData() {
         return pageData;
     }
@@ -662,7 +671,7 @@ public class DocxDocument extends DefaultStyledDocument {
      * Gets the deepest paragraph element from the document tree.
      *
      * @param offset The offset in the document.
-     * @return 
+     * @return
      */
     public Element getParagraph(int offset) {
         Element paragraph = null;
@@ -682,7 +691,7 @@ public class DocxDocument extends DefaultStyledDocument {
      *
      * @param startOffset The start interval offset.
      * @param endOffset The end interval offset.
-     * @return 
+     * @return
      */
     public Vector getInnerTableList(int startOffset, int endOffset) {
         Vector result = new Vector();
@@ -729,7 +738,7 @@ public class DocxDocument extends DefaultStyledDocument {
      * Gets the deepest table element from the document tree.
      *
      * @param offset The offset in the document.
-     * @return 
+     * @return
      */
     public Element getTable(int offset) {
         Element table = null;

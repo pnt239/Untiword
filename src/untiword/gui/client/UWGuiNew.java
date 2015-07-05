@@ -480,7 +480,7 @@ public class UWGuiNew extends javax.swing.JFrame {
 
         fileMenu = new WebMenu("File");
 
-        shareMenuItem = new WebMenuItem("Share..." , resources.loadIcon("resources/share.png"));
+        shareMenuItem = new WebMenuItem("Share...", resources.loadIcon("resources/share.png"));
         fileMenu.add(shareMenuItem);
         fileMenu.addSeparator();
 
@@ -779,8 +779,8 @@ public class UWGuiNew extends javax.swing.JFrame {
         docmentPane = new WebDocumentPane();
         docmentPane.setUndecorated(false);
 
-//        UWEditor editor = new UWEditor();
-//        docmentPane.openDocument(new DocumentData("id", "title", editor));
+        UWEditor editor = new UWEditor(1, "Thanh", clientController);
+        docmentPane.openDocument(new DocumentData("id", "title", editor));
         editorTabPan.add(docmentPane, java.awt.BorderLayout.CENTER);
 
         panel.add(editorTabPan, java.awt.BorderLayout.CENTER);
@@ -796,14 +796,14 @@ public class UWGuiNew extends javax.swing.JFrame {
         UWEditor newDocWindow = new UWEditor(num, name, clientController);
         newDocWindow.setVisible(true);
         clientController.getDocIDtoDocPanel().put(newDocWindow.getNum(), newDocWindow);
-        
+
         String numString = "" + num;
         docmentPane.openDocument(new DocumentData(numString, name, newDocWindow));
 
         CardLayout cl = (CardLayout) (centerPane.getLayout());
         cl.show(centerPane, "EditCard");
         editBreadcrumb.setSelected(true);
-        
+
         clientController.getUser().addDocument(num);
         clientController.sendMessage(clientController.createControlMessage("load", num, name));
     }
@@ -821,10 +821,10 @@ public class UWGuiNew extends javax.swing.JFrame {
                                 if (_fBUser != null) {
                                     fBLoginJFrame.close();
                                     try {
-//                                      Server = serverAddr.getText();
-//                                      Po = serverPort.getText();
-                                        Server = "127.0.0.1";
-                                        Po = "8000";
+                                        Server = serverAddr.getText();
+                                        Po = serverPort.getText();
+                                        //Server = "127.0.0.1";
+                                        //Po = "8000";
                                         clientController.connectToServer(Server, Po);
 
                                         CardLayout cl = (CardLayout) (centerPane.getLayout());
@@ -836,8 +836,8 @@ public class UWGuiNew extends javax.swing.JFrame {
                                     loginFBbtn.setText("Log in as " + _fBUser.getName());
 
                                     isConnect = true;
-                                    mainEditor.authorize(_fBUser.getAccessToken());
-                                }                                                          
+                                    //clientController.authorize(_fBUser.getAccessToken());
+                                }
                             }
                         }
                     }
