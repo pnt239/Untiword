@@ -68,6 +68,7 @@ import javax.swing.JScrollPane;
 //import org.eclipse.swt.internal.win32.OS;
 import untiword.utils.Resources;
 import untiword.components.UWEditor;
+import untiword.components.docx.DocxDocument;
 import untiword.controller.ClientController;
 import untiword.events.CreateDocumentListener;
 import untiword.events.ListDocumentEvent;
@@ -804,7 +805,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         cl.show(centerPane, "EditCard");
         editBreadcrumb.setSelected(true);
 
-        clientController.getUser().addDocument(num);
+        clientController.getUser().addDocument(num, (DocxDocument) newDocWindow.getTextPane().getDocument());
         clientController.sendMessage(clientController.createControlMessage("load", num, name));
     }
 

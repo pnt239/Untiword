@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import untiword.components.docx.DocxDocument;
 
 
 /**
@@ -55,8 +56,8 @@ public class UserDQ {
      * 
      * @param documentID - document to be added
      */
-    public synchronized void addDocument(int documentID) {
-        documents.put(documentID, new DocumentDQ(userID));
+    public synchronized void addDocument(int documentID, DocxDocument doc) {
+        documents.put(documentID, new DocumentDQ(userID, doc));
     }
     
     /**
@@ -65,7 +66,7 @@ public class UserDQ {
      * @param documentID - the requested document
      * @return String - a user's view
      */
-    public synchronized String getView(int documentID) {
+    public synchronized DocxDocument getView(int documentID) {
        return documents.get(documentID).getView();
     }
     
@@ -78,7 +79,7 @@ public class UserDQ {
      * @param documentID - requested document
      * @return String - current syncCopy
      */
-    public synchronized String getSyncCopy(int documentID) {
+    public synchronized DocxDocument getSyncCopy(int documentID) {
        return documents.get(documentID).getSyncCopy();
     }
     

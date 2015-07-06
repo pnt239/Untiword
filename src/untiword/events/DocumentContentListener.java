@@ -117,7 +117,7 @@ public class DocumentContentListener implements DocumentListener {
                         "" + action.toString() + "|" + offset + "|"
                                 + (offset + length) + "|" + "wooo");
             }
-            clientController.sendMessage(clientController.getUser().pullRequest());
+            //clientController.sendMessage(clientController.getUser().pullRequest());
         }
     }
 
