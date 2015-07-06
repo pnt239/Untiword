@@ -3,16 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package View.Account;
-
-import java.util.EventListener;
+package untiword.events;
 
 /**
  *
  * @author Lilium Aikia
  */
-public interface FBLoginJFrameEventListener extends EventListener 
+public interface AuthorizationListener 
 {
-    public void loginSuccess();
-    public void loginFailed();
+    public void authorizeSucess();
+    public void authorizeFailed();
 }

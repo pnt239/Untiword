@@ -8,6 +8,7 @@ package View.Account;
 import Controller.AccountController.FacebookController;
 import Model.Account.FacebookUser;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.net.MalformedURLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -83,6 +84,20 @@ public class FBLoginJFrame extends javax.swing.JFrame {
                         _fbBLoginJFrameEventListener.loginSuccess();
                     }            
                 }
+                else if(_webBrowser.getUrl().startsWith("www.localhost")
+                        || _webBrowser.getUrl().startsWith("localhost")
+                        || _webBrowser.getUrl().startsWith("https://www.localhost")
+                        || _webBrowser.getUrl().startsWith("https://localhost")
+                        || _webBrowser.getUrl().startsWith("http://www.localhost")
+                        || _webBrowser.getUrl().startsWith("http://localhost"))
+                {
+                    setVisible(false);
+                    _loginSuccess = false;
+                    if(_fbBLoginJFrameEventListener != null)
+                    {
+                        _fbBLoginJFrameEventListener.loginFailed();
+                    }
+                }
             });
         }
     }
@@ -98,7 +113,8 @@ public class FBLoginJFrame extends javax.swing.JFrame {
         if(_webBrowser != null)
         {
             setWebBrowserListener();
-            getContentPane().add(_webBrowser);
+            add(_webBrowser, BorderLayout.CENTER);
+            _webBrowser.setPreferredSize(new Dimension(_webBrowser.getHeight(), _webBrowser.getWidth()));
         }          
     }
 
@@ -111,17 +127,20 @@ public class FBLoginJFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Login Facebook");
+        setPreferredSize(new java.awt.Dimension(800, 665));
+        setResizable(false);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 829, Short.MAX_VALUE)
+            .addGap(0, 800, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 476, Short.MAX_VALUE)
+            .addGap(0, 625, Short.MAX_VALUE)
         );
 
         pack();

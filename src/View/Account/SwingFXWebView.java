@@ -7,6 +7,7 @@ package View.Account;
 
 import com.sun.javafx.application.PlatformImpl;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -55,7 +56,8 @@ public class SwingFXWebView extends javax.swing.JPanel
         createScene(url);  
          
         setLayout(new BorderLayout());  
-        add(_jfxPanel, BorderLayout.CENTER);  
+        add(_jfxPanel, BorderLayout.CENTER);
+        _jfxPanel.setPreferredSize(new Dimension(_jfxPanel.getHeight(), _jfxPanel.getWidth()));
          
         _swingButton = new JButton();  
         _swingButton.addActionListener((ActionEvent e) -> {
@@ -83,11 +85,11 @@ public class SwingFXWebView extends javax.swing.JPanel
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 744, Short.MAX_VALUE)
+            .addGap(0, 229, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 476, Short.MAX_VALUE)
+            .addGap(0, 184, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -100,7 +102,7 @@ public class SwingFXWebView extends javax.swing.JPanel
             _stage = new Stage();
             
             _stage.setTitle("Login Facebook");
-            _stage.setResizable(false);
+            _stage.setResizable(true);
             
             Group root = new Group();
             Scene scene = new Scene(root,80,20);

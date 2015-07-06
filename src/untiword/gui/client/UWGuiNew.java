@@ -70,6 +70,8 @@ import untiword.utils.Resources;
 import untiword.components.UWEditor;
 import untiword.components.docx.DocxDocument;
 import untiword.controller.ClientController;
+import untiword.events.AuthorizationListener;
+import untiword.events.ConnectionResultListener;
 import untiword.events.CreateDocumentListener;
 import untiword.events.ListDocumentEvent;
 import untiword.events.ListDocumentListener;
@@ -86,7 +88,8 @@ import untiword.model.DocumentIDsAndNames;
 public class UWGuiNew extends javax.swing.JFrame {
 
     private FacebookUser _fBUser;
-    private AccountController _accountController;
+    WebButton _loginFBbtn;
+    FBLoginJFrame _fBLoginJFrame;
 
     private WebPanel bottomPane;
     private WebBreadcrumb breadcrumb;
@@ -298,19 +301,17 @@ public class UWGuiNew extends javax.swing.JFrame {
         serverPort.setHideInputPromptOnFocus(false);
         serverPort.setBounds(50, 80, 300, 25);
 
-        WebButton loginFBbtn = new WebButton("Login with Facebook");
-        loginFBbtn.setBounds(100, 115, 200, 30);
-
-        loginFBbtn.addActionListener(new ActionListener() {
+        _loginFBbtn = new WebButton("Login with Facebook");
+        _loginFBbtn.setBounds(100, 115, 200, 30);
+        _loginFBbtn.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                FBLoginJFrame fBLoginJFrame;
                 try {
-                    fBLoginJFrame = new FBLoginJFrame();
-                    fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                    fBLoginJFrame.setVisible(true);
-                    setFBLoginJFrameEventListener(fBLoginJFrame, loginFBbtn);
+                    _fBLoginJFrame = new FBLoginJFrame();
+                    _fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    _fBLoginJFrame.setVisible(true);
+                    setFBLoginJFrameEventListener(_fBLoginJFrame, _loginFBbtn);
                 } catch (MalformedURLException ex) {
                     Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -321,7 +322,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         loginFormPan.add(label);
         loginFormPan.add(serverAddr);
         loginFormPan.add(serverPort);
-        loginFormPan.add(loginFBbtn);
+        loginFormPan.add(_loginFBbtn);
 
         loginPane.add(loginFormPan);
         loginPane.add(filler2);
@@ -385,6 +386,45 @@ public class UWGuiNew extends javax.swing.JFrame {
 
                 CardLayout cl = (CardLayout) (centerPane.getLayout());
                 cl.show(centerPane, "EditCard");
+            }
+        });
+        
+        clientController.setAuthorizationListener(new AuthorizationListener() {
+
+            @Override
+            public void authorizeSucess() 
+            {
+                try
+                {
+                    CardLayout cl = (CardLayout) (centerPane.getLayout());
+                    cl.show(centerPane, "OpenCard");
+                    openBreadcrumb.setSelected(true);
+                    _loginFBbtn.setText("Log in as " + _fBUser.getName());                  
+                    isConnect = true;
+                }
+                catch(Exception e)
+                {
+                    System.out.println(e.toString());
+                }             
+            }
+
+            @Override
+            public void authorizeFailed() {
+                System.out.println("Authorize failed!");
+            }
+        });
+        
+        clientController.setConnectionResultListener(() -> {
+            try
+            {
+                _fBLoginJFrame.close();
+                _fBLoginJFrame = new FBLoginJFrame();
+                _fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                _fBLoginJFrame.setVisible(false);
+            }
+            catch(Exception e)
+            {
+                System.out.println(e.toString());
             }
         });
     }
@@ -813,13 +853,13 @@ public class UWGuiNew extends javax.swing.JFrame {
         if (fBLoginJFrame != null) {
             try {
                 FBLoginJFrameEventListener fBLoginJFrameEventListener = new FBLoginJFrameEventListener() {
-
                     @Override
                     public void loginSuccess() {
                         if (fBLoginJFrame.getLoginSuccess()) {
                             if (loginFBbtn != null) {
                                 _fBUser = fBLoginJFrame.getUser();
-                                if (_fBUser != null) {
+                                if (_fBUser != null) 
+                                {
                                     fBLoginJFrame.close();
                                     try {
                                         Server = serverAddr.getText();
@@ -827,20 +867,23 @@ public class UWGuiNew extends javax.swing.JFrame {
                                         //Server = "127.0.0.1";
                                         //Po = "8000";
                                         clientController.connectToServer(Server, Po);
-
-                                        CardLayout cl = (CardLayout) (centerPane.getLayout());
-                                        cl.show(centerPane, "OpenCard");
-                                        openBreadcrumb.setSelected(true);
+                                        clientController.authorize(_fBUser.getAccessToken()); 
+//                                        CardLayout cl = (CardLayout) (centerPane.getLayout());
+//                                        cl.show(centerPane, "OpenCard");
+//                                        openBreadcrumb.setSelected(true);
                                     } catch (IOException ex) {
                                         Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
                                     }
-                                    loginFBbtn.setText("Log in as " + _fBUser.getName());
-
-                                    isConnect = true;
-                                    //clientController.authorize(_fBUser.getAccessToken());
+                                    //loginFBbtn.setText("Log in as " + _fBUser.getName());
+                                    //isConnect = true;                                                                   
                                 }
                             }
                         }
+                    }
+
+                    @Override
+                    public void loginFailed() {
+                        System.out.println("Login Failed!");
                     }
                 };
                 fBLoginJFrame.setFBLoginJFrameEventListener(fBLoginJFrameEventListener);

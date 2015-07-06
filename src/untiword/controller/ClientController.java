@@ -5,6 +5,7 @@
  */
 package untiword.controller;
 
+import untiword.events.AuthorizationListener;
 import com.alee.laf.optionpane.WebOptionPane;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,8 +23,10 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
+import libraryclasses.CustomRequest;
 import untiword.components.UWEditor;
 import untiword.components.docx.DocxDocument;
+import untiword.events.ConnectionResultListener;
 import untiword.events.CreateDocumentListener;
 import untiword.events.ListDocumentEvent;
 import untiword.events.ListDocumentListener;
@@ -39,6 +42,18 @@ import untiword.model.UserDQ;
  * @author NThanh
  */
 public class ClientController {
+    
+    private AuthorizationListener _authorizationListener;
+    public void setAuthorizationListener(AuthorizationListener listener)
+    {
+        _authorizationListener = listener;
+    }
+    
+    private ConnectionResultListener _connectionResultListener;
+    public void setConnectionResultListener(ConnectionResultListener listener)
+    {
+        _connectionResultListener = listener;
+    }
 
     private HashMap<Integer, UWEditor> docIDtoDocPanel;
     private UserDQ user;
@@ -88,14 +103,26 @@ public class ClientController {
             WebOptionPane
                     .showMessageDialog(null,
                             "Connection failed. Please double check your server address and port number.");
+            if(_connectionResultListener != null)
+            {
+                _connectionResultListener.connectFailed();
+            }
         } catch (UnknownHostException e) {
             WebOptionPane
                     .showMessageDialog(null,
                             "Connection failed. Please double check your server address and port number.");
+            if(_connectionResultListener != null)
+            {
+                _connectionResultListener.connectFailed();
+            }
         } catch (IOException e) {
             WebOptionPane
                     .showMessageDialog(null,
                             "Connection failed. Please double check your server address and port number.");
+            if(_connectionResultListener != null)
+            {
+                _connectionResultListener.connectFailed();
+            }
         }
 
         out = new PrintWriter(getServerSocket().getOutputStream(), true);
@@ -174,7 +201,26 @@ public class ClientController {
 
             }
 
-        } else {
+        } 
+        else if(line.startsWith("CUSTOM_REQUEST/AUTHORIZE"))
+        {
+            CustomRequest request = new CustomRequest(line);
+            if("success".equals(request.getValue("result")))
+            {
+                if(_authorizationListener != null)
+                {
+                    _authorizationListener.authorizeSucess();
+                }              
+            }
+            else
+            {
+                if(_authorizationListener != null)
+                {
+                    _authorizationListener.authorizeFailed();
+                }               
+            }
+        }
+        else {
             synchronized (this) {
                 this.ignoreNext = 1;
             }
@@ -421,5 +467,16 @@ public class ClientController {
 
     public List<String> getDocumentIdAndNames() {
         return documentIdAndNames;
+    }
+
+    public void authorize(String accessToken) 
+    {
+        CustomRequest request = new CustomRequest(3);
+        request.setAction("AUTHORIZE");
+        request.setValue("applicationId", getUser().getUserID());
+        request.setValue("loginType", "Facebook");
+        request.setValue("accessToken", accessToken);
+        
+        sendMessage(request.toString());
     }
 }
