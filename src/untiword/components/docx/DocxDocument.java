@@ -6,6 +6,7 @@ import javax.swing.event.UndoableEditEvent;
 import javax.swing.text.*;
 import javax.swing.undo.UndoableEdit;
 import java.awt.*;
+import java.math.BigInteger;
 import java.util.Vector;
 import org.docx4j.wml.SectPr.PgMar;
 import org.docx4j.wml.SectPr.PgSz;
@@ -549,9 +550,8 @@ public class DocxDocument extends DefaultStyledDocument {
     public Font getFont(AttributeSet attr) {
         StyleContext styles = (StyleContext) getAttributeContext();
         Font font = styles.getFont(attr);
-        float newSize = DocxMeasureConverter.pointToPixel(font.getSize()) * 96.0F / 72.0F;
-        Font newFont = font.deriveFont(25F);
-        return newFont;
+        float newSize = font.getSize() * DocxMeasureConverter.getDPI() * 1.0F / 72.0F;
+        return font.deriveFont(newSize);
     }
 
     public int getPageWidth() {

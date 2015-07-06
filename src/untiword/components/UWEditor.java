@@ -28,6 +28,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.html.HTMLDocument;
 import untiword.components.docx.BorderAttributes;
 import untiword.components.docx.DocxDocument;
+import untiword.components.docx.DocxReader;
 import untiword.controller.ClientController;
 import untiword.events.DocumentContentListener;
 
@@ -72,14 +73,16 @@ public class UWEditor extends JScrollPane implements ActionListener {
         // get the text pane
         JViewport v = (JViewport) super.getComponent(0);
         _editor = (UWEditorPane) v.getComponent(0);
-
-        try {
-            FileInputStream in = new FileInputStream("thanh_test.docx");
-            _editor.getEditorKit().read(in, _editor.getDocument(), 0);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        //showFeatures();
+        
+        DocxReader db = new DocxReader(_editor.getDocument());
+        db.createDocument();
+//        try {
+//            FileInputStream in = new FileInputStream("thanh_test.docx");
+//            _editor.getEditorKit().read(in, _editor.getDocument(), 0);
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//        //showFeatures();
 
         // Ruler
         jRuler = new UWRuler((DocxDocument) _editor.getDocument());
