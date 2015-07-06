@@ -2,6 +2,14 @@ package untiword.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.text.BadLocationException;
+import static javax.swing.text.DefaultStyledDocument.BUFFER_SIZE_DEFAULT;
+import javax.swing.text.GapContent;
+import javax.swing.text.StyleContext;
+import untiword.components.docx.DocxDocument;
+import untiword.components.docx.DocxReader;
 
 /**
  * DocumentDQ represents the client side of a document.
@@ -14,7 +22,8 @@ import java.util.List;
 public class DocumentDQ {
     private String userID;
     
-    private String syncCopy;
+    //private String syncCopy;
+    private DocxDocument syncCopy;
     private int syncVersion;
     
     private String lastMessageReceived;
@@ -26,9 +35,11 @@ public class DocumentDQ {
      * and saves the owner ID into a private field
      * 
      * @param userID - the userID of the client
+     * @param doc
      */
-    public DocumentDQ(String userID) {
-        this.syncCopy = "";
+    public DocumentDQ(String userID, DocxDocument doc) {
+
+        this.syncCopy = doc;
         this.syncVersion = 0;
         
         this.userID = userID;
@@ -43,11 +54,11 @@ public class DocumentDQ {
      * 
      * @return String - a viewCopy to be displayed by the GUI
      */
-    public synchronized String getView() {
-        String viewCopy = syncCopy;
+    public synchronized DocxDocument getView() {
+        DocxDocument viewCopy = syncCopy;
         
         for(ServerRequestDQ localChange : localQueue) {
-            viewCopy = applyChange(viewCopy, localChange);
+            applyChange(viewCopy, localChange);
         }
         
         return viewCopy;
@@ -61,7 +72,7 @@ public class DocumentDQ {
     * 
     * @return String - current syncCopy
     */
-    public synchronized String getSyncCopy() {
+    public synchronized DocxDocument getSyncCopy() {
         return syncCopy;
     }
     
@@ -96,7 +107,7 @@ public class DocumentDQ {
         lastMessageReceived = requestText;
         
         // Update the synchronized version
-        syncCopy = applyChange(syncCopy, request);
+        applyChange(syncCopy, request);
         syncVersion = request.getVersionID();
         
         // If own request -> remove and continue
@@ -123,18 +134,24 @@ public class DocumentDQ {
      * @param request - the change to be applied
      * @return String - the final version of the String after the change is applied
      */
-    public String applyChange(String source, ServerRequestDQ request) {
-        StringBuilder result = new StringBuilder(source);
+    public void applyChange(DocxDocument source, ServerRequestDQ request) {
         
         if(request.getAction().equals("INSERT")) {
-            result.insert(request.getBeginning(), request.getContent());
+            try {
+                source.insertString(request.getBeginning(), request.getContent(), null);
+            } catch (BadLocationException ex) {
+                Logger.getLogger(DocumentDQ.class.getName()).log(Level.SEVERE, null, ex);
+            }
         } else if(request.getAction().equals("DELETE")) {
-            result.delete(request.getBeginning(), request.getEnd());
+            try {
+                source.remove(request.getBeginning(), request.getEnd() - request.getBeginning());
+            } catch (BadLocationException ex) {
+                Logger.getLogger(DocumentDQ.class.getName()).log(Level.SEVERE, null, ex);
+            }
         } else {
             System.out.println("Action not supported, ignoring...");
         }
-        
-        return result.toString();
+
     }
     
     /**

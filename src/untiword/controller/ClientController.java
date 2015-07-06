@@ -5,7 +5,6 @@
  */
 package untiword.controller;
 
-import Model.UserDQ;
 import com.alee.laf.optionpane.WebOptionPane;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,6 +32,7 @@ import untiword.events.NotFoundDocumentListener;
 import untiword.events.RenameDocumentEvent;
 import untiword.events.RenameDocumentListener;
 import untiword.model.ServerRequestDQ;
+import untiword.model.UserDQ;
 
 /**
  *
@@ -52,7 +52,7 @@ public class ClientController {
     private ArrayList<NotFoundDocumentListener> notFoundDocListenerList = new ArrayList<NotFoundDocumentListener>();
     private ArrayList<ListDocumentListener> listDocListenerList = new ArrayList<ListDocumentListener>();
     private ArrayList<String> documentIdAndNames = new ArrayList<String>();
-    
+
     private CreateDocumentListener docListener;
 
     public ClientController() {
@@ -76,7 +76,7 @@ public class ClientController {
             listDocListenerList.add(listener);
         }
     }
-    
+
     public void setCreateDocumentListener(CreateDocumentListener listener) {
         docListener = listener;
     }
@@ -106,7 +106,7 @@ public class ClientController {
 
         MHT = new MessageHandlingThread(this, in);
         MHT.start();
-        
+
         this.sendMessage(this.createControlMessage("getdoclist", -1, ""));
     }
 
@@ -153,9 +153,10 @@ public class ClientController {
                 // reopen
                 // update userDQ with new doc, send a load message
                 String[] splitDoc = splitString[2].split("~");
-                getUser().addDocument(Integer.parseInt(splitDoc[0]));
+                
 
                 UWEditor newDocWindow = new UWEditor(Integer.parseInt(splitDoc[0]), splitDoc[1], this);
+                getUser().addDocument(Integer.parseInt(splitDoc[0]), (DocxDocument)newDocWindow.getTextPane().getDocument());
                 newDocWindow.setVisible(true);
                 docListener.getUWPanel(newDocWindow);
 //                DocPanel newDocWindow = new DocPanel(
@@ -174,6 +175,9 @@ public class ClientController {
             }
 
         } else {
+            synchronized (this) {
+                this.ignoreNext = 1;
+            }
             this.getUser().pushRequest(line);
             String[] splitString = line.split("\\|");
 
@@ -189,15 +193,15 @@ public class ClientController {
      */
     public void updateView(String docID) {
         synchronized (this) {
-            this.ignoreNext = 2;
+            //this.ignoreNext = 1;
 
             int docId = Integer.parseInt(docID);
             UWEditor panelToUpdate = docIDtoDocPanel.get(docId);
-            DocxDocument document = (DocxDocument)panelToUpdate.getTextPane().getDocument();
+            DocxDocument document = (DocxDocument) panelToUpdate.getTextPane().getDocument();
             JTextPane tempPane = panelToUpdate.getTextPane();
 
             ServerRequestDQ newSelection = null;
-            
+
             // insert message
             if (tempPane.getSelectionStart() == tempPane.getSelectionEnd()) {
                 String req = ("dummyUser" + "|" + 24 + "|" + docId + "|"
@@ -211,18 +215,25 @@ public class ClientController {
                         + tempPane.getSelectionEnd() + "|" + "filler" + "|" + "0");
                 newSelection = new ServerRequestDQ(user.updateSelection(req));
             }
-            String content = user.getView(docId).replace("~", "\n");
-            if (content.equals("")) {
-                ignoreNext = 0;
-            }
+
+            DocxDocument doc = user.getView(docId);
+            //String content = user.getView(docId).replace("~", "\n");
+            String content = "";
             try {
-                //panelToUpdate.getTextPane().setText(content);
-                document.insertString(newSelection.getBeginning(), content, null);
+                content = doc.getText(0, 1);
             } catch (BadLocationException ex) {
                 Logger.getLogger(ClientController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
+
+            if (content.equals("")) {
+                ignoreNext = 0;
+            }
+
+            //panelToUpdate.getTextPane().setText(content);
+            //panelToUpdate.getTextPane().setDocument(doc);
+
             if (newSelection.getAction().equals("INSERT")) {
+                ignoreNext = 0;
                 //tempPane.setCaretPosition(newSelection.getBeginning());
             } else {
                 //tempPane.setSelectionStart(newSelection.getBeginning());
@@ -407,7 +418,7 @@ public class ClientController {
     public void setDocIDtoDocPanel(HashMap<Integer, UWEditor> docIDtoDocPanel) {
         this.docIDtoDocPanel = docIDtoDocPanel;
     }
-    
+
     public List<String> getDocumentIdAndNames() {
         return documentIdAndNames;
     }

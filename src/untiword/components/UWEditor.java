@@ -28,6 +28,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.html.HTMLDocument;
 import untiword.components.docx.BorderAttributes;
 import untiword.components.docx.DocxDocument;
+import untiword.components.docx.DocxDocumentFilter;
 import untiword.components.docx.DocxReader;
 import untiword.controller.ClientController;
 import untiword.events.DocumentContentListener;
@@ -43,7 +44,7 @@ public class UWEditor extends JScrollPane implements ActionListener {
     private static final long serialVersionUID = 1L;
     private final int docNum;
     private String docName;
-    private DocumentListener listener;
+    //private DocumentListener listener;
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -55,10 +56,12 @@ public class UWEditor extends JScrollPane implements ActionListener {
         super(new UWEditorPane());
         this.docNum = docNum;
         this.docName = docName;
-        listener = new DocumentContentListener(docNum, client);
+        //listener = new DocumentContentListener(docNum, client);
 
         init();
-        //_editor.getDocument().addDocumentListener(listener);
+        DocxDocument doc = (DocxDocument)_editor.getDocument();
+        doc.setDocumentFilter(new DocxDocumentFilter(client, docNum));
+        //doc.addDocumentListener(listener);
     }
 
     public UWEditorPane getTextPane() {
