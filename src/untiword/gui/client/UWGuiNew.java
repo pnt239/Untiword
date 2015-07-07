@@ -105,7 +105,6 @@ public class UWGuiNew extends javax.swing.JFrame {
     private HashMap<String, String> _loginUsers;
     private WebButton _loginBtn;
 
-
     private WebPanel bottomPane;
     private WebBreadcrumb breadcrumb;
     private WebBreadcrumbToggleButton loginBreadcrumb;
@@ -243,10 +242,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         HttpURLConnection connection = (HttpURLConnection) new URL("https://www.google.com/?gws_rd=ssl").openConnection();
         connection.setRequestMethod("HEAD");
         int responseCode = connection.getResponseCode();
-        if (responseCode != 200) {
-            return false;
-        }
-        return true;
+        return responseCode == 200;
     }
 
     private void initComponents(){
@@ -351,6 +347,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         });
         
         _registerBtn = new WebButton("Register");
+        
         _registerBtn.setBounds(230, 115, 100, 30);
         _registerBtn.addActionListener((ActionEvent e) -> {
             boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
@@ -366,20 +363,16 @@ public class UWGuiNew extends javax.swing.JFrame {
         
         _loginBtn = new WebButton("Login");
         _loginBtn.setBounds(50, 115, 100, 30);
-        _loginBtn.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
-                WebLookAndFeel.setDecorateDialogs ( true );
-                
-                LoginDialog loginDialog = new LoginDialog();
-                loginDialog.pack();
-                loginDialog.setLocationRelativeTo(null);
-                loginDialog.setVisible(true);
-                
-                WebLookAndFeel.setDecorateDialogs ( decorateFrames );
-            }
+        _loginBtn.addActionListener((ActionEvent e) -> {
+            boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
+            WebLookAndFeel.setDecorateDialogs ( true );
+            
+            LoginDialog loginDialog = new LoginDialog();
+            loginDialog.pack();
+            loginDialog.setLocationRelativeTo(null);
+            loginDialog.setVisible(true);
+            
+            WebLookAndFeel.setDecorateDialogs ( decorateFrames );
         });
 
         loginFormPan.add(label);
@@ -590,9 +583,8 @@ public class UWGuiNew extends javax.swing.JFrame {
         if(_loginUsers != null)
         {
              String[] keys = _loginUsers.keySet().toArray(new String[_loginUsers.keySet().size()]);
-            for (int i=0; i<keys.length; i++) 
-            {
-                model.addCheckBoxElement (_loginUsers.get(keys[i]), false);
+            for (String key : keys) {
+                model.addCheckBoxElement(_loginUsers.get(key), false);
             }
         }
        
@@ -1178,8 +1170,8 @@ public class UWGuiNew extends javax.swing.JFrame {
             layout.setVGap ( 5 );
             WebPanel content = new WebPanel ( layout );
             content.setMargin ( 15, 30, 15, 30 );
-            
-            content.setOpaque ( false );          
+
+            content.setOpaque ( false );
             
             content.add (new WebLabel ( "Email", WebLabel.TRAILING ), "0,1" );
             WebTextField wtfEmail = new WebTextField ( 15 );

@@ -131,7 +131,7 @@ public class SEditThread extends Thread {
                         System.out.println("User id" + userID + " was login");    
                         try
                         {
-                            AccountBlo.getInstance().loginWithFacebook(model.getAccessToken());
+                            AccountBlo.getInstance().loginWithFacebook(userID, model.getAccessToken());
                             request.setValue("result", "success");      
                             System.out.println();
                         }
@@ -171,13 +171,13 @@ public class SEditThread extends Thread {
                                 {
                                     if(logins[i] != null)
                                     {
-                                        usersString += logins[i].getId()+ "|" + logins[i].getFacebookEmail() + "|";
+                                        usersString += logins[i].getApplicationId()+ "|" + logins[i].getFacebookEmail() + "|";
                                     }                                   
                                 }
                                 
                                 if(logins[logins.length - 1] != null)
                                 {
-                                     usersString += logins[logins.length - 1].getId() + "|" + logins[logins.length - 1].getFacebookEmail();
+                                     usersString += logins[logins.length - 1].getApplicationId()+ "|" + logins[logins.length - 1].getFacebookEmail();
                                 }                           
                                 
                                 CustomRequest newRequest = new CustomRequest(2);
