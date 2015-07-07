@@ -67,7 +67,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -108,6 +110,7 @@ public class UWGuiNew extends javax.swing.JFrame {
     private FacebookUser _fBUser;
     WebButton _loginFBbtn;
     WebButton _registerBtn;
+    WebButton _loginBtn;
     FBLoginJFrame _fBLoginJFrame;
 
     private WebPanel bottomPane;
@@ -228,8 +231,17 @@ public class UWGuiNew extends javax.swing.JFrame {
         initComponents();
         createClient();
     }
+    public boolean isConnectInternet() throws IOException{
+        HttpURLConnection connection = (HttpURLConnection) new URL("https://www.google.com/?gws_rd=ssl").openConnection();
+        connection.setRequestMethod("HEAD");
+        int responseCode = connection.getResponseCode();
+        if (responseCode != 200) {
+            return false;
+        }
+        return true;
+    }
 
-    private void initComponents() {
+    private void initComponents(){
         // Init variable
         resources = new Resources();
         bottomPane = new WebPanel();
@@ -342,7 +354,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         });
         
         _registerBtn = new WebButton("Register");
-        _registerBtn.setBounds(230, 115, 100, 30);
+        _registerBtn.setBounds(160, 115, 100, 30);
         _registerBtn.addActionListener(new ActionListener() {
 
             @Override
@@ -358,12 +370,40 @@ public class UWGuiNew extends javax.swing.JFrame {
                 WebLookAndFeel.setDecorateDialogs ( decorateFrames );
             }
         });
+        
+        _loginBtn = new WebButton("Login");
+        _loginBtn.setBounds(50, 115, 100, 30);
+        _loginBtn.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
+                WebLookAndFeel.setDecorateDialogs ( true );
+                
+                LoginDialog loginDialog = new LoginDialog();
+                loginDialog.pack();
+                loginDialog.setLocationRelativeTo(null);
+                loginDialog.setVisible(true);
+                
+                WebLookAndFeel.setDecorateDialogs ( decorateFrames );
+            }
+        });
 
         loginFormPan.add(label);
         loginFormPan.add(serverAddr);
-        loginFormPan.add(serverPort);        
-        loginFormPan.add(_loginFBbtn);
-        loginFormPan.add(_registerBtn);
+        loginFormPan.add(serverPort);
+        try {
+            if(!isConnectInternet()){
+                loginFormPan.add(_registerBtn);
+                loginFormPan.add(_loginBtn);
+            } else {
+                loginFormPan.add(_loginFBbtn);
+            }
+        } catch (IOException ex) {
+            loginFormPan.add(_registerBtn);
+            loginFormPan.add(_loginBtn);
+        }
+
 
         loginPane.add(loginFormPan);
         loginPane.add(filler2);
@@ -1138,9 +1178,6 @@ public class UWGuiNew extends javax.swing.JFrame {
             WebPanel content = new WebPanel ( layout );
             content.setMargin ( 15, 30, 15, 30 );
             content.setOpaque ( false );
-
-            content.add ( new WebLabel ( "UserName", WebLabel.TRAILING ), "0,0" );
-            content.add ( new WebTextField ( 15 ), "1,0" );
             
             content.add ( new WebLabel ( "Email", WebLabel.TRAILING ), "0,1" );
             content.add ( new WebTextField ( 15 ), "1,1" );
@@ -1167,6 +1204,53 @@ public class UWGuiNew extends javax.swing.JFrame {
 
             HotkeyManager.registerHotkey ( this, register, Hotkey.ESCAPE );
             HotkeyManager.registerHotkey ( this, register, Hotkey.ENTER );
+        }
+    }
+    
+    private class LoginDialog extends WebDialog
+    {
+        public LoginDialog ()
+        {
+            super ();
+            this.setTitle("Login");
+            setIconImages ( WebLookAndFeel.getImages () );
+            setDefaultCloseOperation ( WebDialog.DISPOSE_ON_CLOSE );
+            setResizable ( false );
+            setModal ( true );
+
+            TableLayout layout = new TableLayout ( new double[][]{ { TableLayout.PREFERRED, TableLayout.FILL },
+                    { TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED } } );
+            layout.setHGap ( 5 );
+            layout.setVGap ( 5 );
+            WebPanel content = new WebPanel ( layout );
+            content.setMargin ( 15, 30, 15, 30 );
+            content.setOpaque ( false );
+
+            content.add ( new WebLabel ( "Email", WebLabel.TRAILING ), "0,0" );
+            content.add ( new WebTextField ( 15 ), "1,0" );
+
+            content.add ( new WebLabel ( "Password", WebLabel.TRAILING ), "0,1" );
+            content.add ( new WebPasswordField ( 15 ), "1,1" );
+
+            WebButton login = new WebButton ( "Login" );
+            WebButton cancel = new WebButton ( "Cancel" );
+            ActionListener listener = new ActionListener ()
+            {
+                @Override
+                public void actionPerformed ( ActionEvent e )
+                {
+                    setVisible ( false );
+                }
+            };
+            login.addActionListener ( listener );
+            cancel.addActionListener ( listener );
+            content.add ( new CenterPanel ( new GroupPanel ( 5, login, cancel ) ), "0,2,1,2" );
+            SwingUtils.equalizeComponentsWidths ( login, cancel );
+
+            add ( content );
+
+            HotkeyManager.registerHotkey ( this, login, Hotkey.ESCAPE );
+            HotkeyManager.registerHotkey ( this, login, Hotkey.ENTER );
         }
     }
 }
