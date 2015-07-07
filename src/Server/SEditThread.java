@@ -192,6 +192,20 @@ public class SEditThread extends Thread {
                         }
                     }
                 }
+                else if(line.startsWith("CUSTOM_REQUEST/INVITE"))
+                {
+                    CustomRequest request = new CustomRequest(line);
+                    int documentId = Integer.parseInt(request.getValue("documentId"));
+                    String parts[] = request.getValue("clientList").split("[|]");
+                    for(int i=0; i<parts.length; i++)
+                    {
+                        CustomRequest newRequest = new CustomRequest(1);
+                        newRequest.setAction("NOTIFY");
+                        newRequest.setValue("message", "You are shared document" 
+                                + String.valueOf(documentId) + "by " + request.getValue("applicationId") + "!");
+                        sendMessage(newRequest.toString());
+                    }
+                }
 
                 System.out.println("Incoming message from " + userID + ": " + line);
 

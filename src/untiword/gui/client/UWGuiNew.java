@@ -520,6 +520,10 @@ public class UWGuiNew extends javax.swing.JFrame {
                 
             }
         });
+        
+        clientController.setReveiceNotifyListener((String message) -> {
+            NotificationManager.showNotification (message);
+        });
     }
 
     private void addOpenNew(JPanel panel) {
@@ -1255,8 +1259,11 @@ public class UWGuiNew extends javax.swing.JFrame {
             content.add ( new CenterPanel ( new GroupPanel ( 5, login, cancel ) ), "0,2,1,2" );
             SwingUtils.equalizeComponentsWidths ( login, cancel );
 
-            add ( content );
-
+            add ( content );          
+        }
+        
+        private void loginHotkeys(WebButton login)
+        {
             HotkeyManager.registerHotkey ( this, login, Hotkey.ESCAPE );
             HotkeyManager.registerHotkey ( this, login, Hotkey.ENTER );
         }
