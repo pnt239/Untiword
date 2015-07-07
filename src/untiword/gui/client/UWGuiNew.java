@@ -82,6 +82,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import untiword.components.UWDocumentElement;
@@ -441,7 +442,35 @@ public class UWGuiNew extends javax.swing.JFrame {
 
             @Override
             public void RenameDocument(RenameDocumentEvent event) {
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                String newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
+                        , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
+                
+                while (newName == null || newName.contains("|") || newName.contains("~") || newName.equals("")){
+                    if (newName == null) { //user hits CANCEL
+                        return;
+                    }else if (newName.equals("")) { //user did not enter a name
+                        WebOptionPane.showMessageDialog ( null,
+                                "New Name can't be blank!", "Error", WebOptionPane.ERROR_MESSAGE );
+                    } else if (newName.contains("~") || newName.equals("|")) { //user enters ~/|
+                        WebOptionPane.showMessageDialog (null, 
+                                "Oops! Something Wrong!", "Error", WebOptionPane.ERROR_MESSAGE );
+                    }
+                    
+                    newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
+                        , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
+                }
+                 int idxSelected = (int) docListView.getSelectedIndex();
+                    if (idxSelected == 0) {
+                        createDocument();
+                        return;
+                    } else {
+                        idxSelected--;
+                    }
+                String nameId = clientController.getDocumentIdAndNames().get(idxSelected);
+                DocumentIDsAndNames docNameID = new DocumentIDsAndNames(nameId);
+                int num = docNameID.getNum();
+                clientController.sendMessage(clientController.createControlMessage("rename",
+                        num, newName));
             }
         });
 
@@ -780,6 +809,41 @@ public class UWGuiNew extends javax.swing.JFrame {
         fileMenu.add(openMenuItem);
 
         renameMenuItem = new WebMenuItem("Rename");
+        renameMenuItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
+                        , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
+                
+                while (newName == null || newName.contains("|") || newName.contains("~") || newName.equals("")){
+                    if (newName == null) { //user hits CANCEL
+                        return;
+                    }else if (newName.equals("")) { //user did not enter a name
+                        WebOptionPane.showMessageDialog ( null,
+                                "New Name can't be blank!", "Error", WebOptionPane.ERROR_MESSAGE );
+                    } else if (newName.contains("~") || newName.equals("|")) { //user enters ~/|
+                        WebOptionPane.showMessageDialog (null, 
+                                "Oops! Something Wrong!", "Error", WebOptionPane.ERROR_MESSAGE );
+                    }
+                    
+                    newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
+                        , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
+                }
+                 int idxSelected = (int) docListView.getSelectedIndex();
+                    if (idxSelected == 0) {
+                        createDocument();
+                        return;
+                    } else {
+                        idxSelected--;
+                    }
+                String nameId = clientController.getDocumentIdAndNames().get(idxSelected);
+                DocumentIDsAndNames docNameID = new DocumentIDsAndNames(nameId);
+                int num = docNameID.getNum();
+                clientController.sendMessage(clientController.createControlMessage("rename",
+                        num, newName));
+            }
+        });
         fileMenu.add(renameMenuItem);
 
         saveasMenuItem = new WebMenuItem("Make a copy ...");
