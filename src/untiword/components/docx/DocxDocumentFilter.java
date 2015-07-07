@@ -39,19 +39,21 @@ public class DocxDocumentFilter extends DocumentFilter {
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text,
             AttributeSet attrs) throws BadLocationException {
+        super.replace(fb, offset, length, text, attrs);
         update(fb, offset, length, text, attrs, EditType.INSERT);
     }
 
     @Override
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
+
+        super.remove(fb, offset, length);
+
         if (this.client.getIgnoreNext() > 0) {
             this.client.setIgnoreNext(this.client.getIgnoreNext() - 1);
-            super.remove(fb, offset, length);
-            return;
+        } else {
+            update(fb, offset, length, "", null, EditType.DELETE);
         }
-
-        update(fb, offset, length, "", null, EditType.DELETE);
     }
 
     private void update(FilterBypass fb, int offset, int length, String text,
