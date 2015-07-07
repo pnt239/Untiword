@@ -28,28 +28,63 @@ public class FacebookUser
     
     public String getUid()
     {
-        return _user.getId();
+        if(_user != null)
+        {
+            return _user.getId();
+        }
+        
+        return "";
     }
     
     public String getName()
     {
-        return _user.getName();
+        if(_user != null)
+        {
+            return _user.getName();
+        }
+        
+        return "";
     }
     
     public String getEmail()
     {
-        return _user.getEmail();
+        if(_user != null)
+        {
+            return _user.getEmail();
+        }
+        
+        return "";
     }
     
     public String getFirstName()
     {
-        return _user.getFirstName();
+        if(_user != null)
+        {
+            return _user.getFirstName();
+        }
+        
+        return "";
     }
     
     public String getLastName()
     {
-        return _user.getLastName();
+        if(_user != null)
+        {
+            return "";
+        }
+        
+        return _user.getId();
     }    
+    
+    public String getPicture()
+    {
+        if(_user != null)
+        {
+            return _user.getPicture().getUrl();
+        }
+        
+        return "";
+    }
     
     public FacebookUser(User user, String accessToken)
     {

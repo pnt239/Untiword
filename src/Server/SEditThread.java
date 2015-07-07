@@ -2,7 +2,7 @@ package Server;
 
 import Controller.AccountController.FacebookController;
 import Model.Account.AccountLoginViewModel;
-import Server.Business.AccountBlo;
+import Server.BusinessLogicLayer.AccountBlo;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

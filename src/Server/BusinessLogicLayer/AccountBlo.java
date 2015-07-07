@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Server.Business;
+package Server.BusinessLogicLayer;
 
 import Controller.AccountController.FacebookController;
 import Model.Account.Account;
 import Model.Account.FacebookUser;
-import Server.Dao.AccountDao;
+import Server.DataAccessLayer.AccountDao;
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -45,7 +45,7 @@ public class AccountBlo
         
         if(user != null)
         {
-            if(AccountDao.getInstance().exists(user.getUid()))
+            if(AccountDao.getInstance().exists(user.getUid(), "facebookUserId"))
             {
                 result = true;
             }
@@ -54,9 +54,9 @@ public class AccountBlo
         return result;
     }
     
-    public Account getUser(String fBUserId) throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException
+    public Account getUser(String attrName, String attrValue) throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException
     {
-        return AccountDao.getInstance().getUser(fBUserId);
+        return AccountDao.getInstance().getUser(attrName, attrValue);
     }
     
     public Account[] getUsers() throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException
@@ -69,6 +69,13 @@ public class AccountBlo
         return AccountBlo.getInstance().getLoginUsers();
     }
     
+    public int register(String username, String password, String email)
+    {
+        int result = -1;
+        
+        return result;
+    }
+    
     public String login(String userToken) throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException
     {
         String result = "";
@@ -78,7 +85,7 @@ public class AccountBlo
         
         if(user != null)
         {
-            if(AccountDao.getInstance().exists(user.getUid()) == false)
+            if(AccountDao.getInstance().exists(user.getUid(), "facebookUserId") == false)
             {
                 Account newAccount = new Account();
                 newAccount.setFBUser(user);
@@ -96,7 +103,7 @@ public class AccountBlo
         FacebookUser user = fc.getUser(userToken);
         if(user != null)
         {
-            AccountDao.getInstance().logout(user.getUid());
+            AccountDao.getInstance().logout(user.getUid(), "facebookUserId");
         }
     }
 }

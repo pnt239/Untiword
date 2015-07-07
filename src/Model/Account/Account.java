@@ -24,41 +24,6 @@ public class Account
         _id = id;
     }
     
-    private FacebookUser _fBUser;
-    public FacebookUser getFBUser()
-    {
-        return _fBUser;
-    }
-    
-    public void setFBUser(FacebookUser value)
-    {
-        _fBUser = value;
-    }
-    
-    private String _ip;
-    
-    public String getIp()
-    {
-        return _ip;
-    }
-    
-    public void setIp(String value)
-    {
-        _ip = value;
-    }
-    
-    private String _name;
-    
-    public String getName()
-    {
-        return _name;
-    }
-    
-    public void setName(String value)
-    {
-        _name = value;
-    }
-    
     private Date _dateRegister;
     public Date getDateRegister()
     {
@@ -68,6 +33,28 @@ public class Account
     public void setDateRegister(Date value)
     {
         _dateRegister = value;
+    }    
+    
+    private String _username;
+    public String getUsername()
+    {
+        return _username;
+    }
+    
+    public void setUsername(String value)
+    {
+        _username = value;
+    }
+    
+    private String _password;
+    public String getPassword()
+    {
+        return _password;
+    }
+    
+    public void setPassword(String value)
+    {
+        _password = value;
     }
     
     private String _email;
@@ -81,14 +68,74 @@ public class Account
         _email = value;
     }
     
-    private String _fBUserId;   
-    public String getFBUserId()
+    private FacebookUser _fBUser;
+    public FacebookUser getFBUser()
     {
-        return _fBUserId;
+        return _fBUser;
     }
     
-    public void setFBUserId(String value)
+    public void setFBUser(FacebookUser value)
     {
-        _fBUserId = value;
+        _fBUser = value;
+    }
+    
+    public String getFacebookAccessToken()
+    {
+        if(_fBUser != null)
+        {
+            return _fBUser.getAccessToken();
+        }
+        
+        return "";
+    }
+    
+    public String getFBUserId()
+    {
+        if(_fBUser != null)
+        {
+            return _fBUser.getUid();
+        }
+        
+        return "";
+    }
+    
+    public String getFacebookName()
+    {
+        if(_fBUser != null)
+        {
+            return _fBUser.getName();
+        }
+        
+        return "";
+    }
+    
+    public String getFacebookFirstName()
+    {
+        if(_fBUser != null)
+        {
+            return _fBUser.getFirstName();
+        }
+        
+        return "";
+    }
+    
+    public String getFacebookLastName()
+    {
+        if(_fBUser != null)
+        {
+            return _fBUser.getLastName();
+        }
+        
+        return "";
+    }
+    
+    public String getFacebookEmail()
+    {
+        if(_fBUser != null)
+        {
+            return _fBUser.getEmail();
+        }
+        
+        return "";
     }
 }
