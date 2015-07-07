@@ -65,6 +65,7 @@ public class UWGuiTest extends javax.swing.JFrame {
 
         jLabel1.setText("Connect to server");
 
+        jTextField1.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         jTextField1.setText("jTextField1");
 
         jTextField2.setText("jTextField2");
