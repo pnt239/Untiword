@@ -13,10 +13,18 @@ import com.alee.extended.breadcrumb.WebBreadcrumb;
 import com.alee.extended.breadcrumb.WebBreadcrumbButton;
 import com.alee.extended.breadcrumb.WebBreadcrumbToggleButton;
 import com.alee.extended.button.WebSplitButton;
+import com.alee.extended.layout.TableLayout;
+import com.alee.extended.layout.VerticalFlowLayout;
+import com.alee.extended.list.CheckBoxCellData;
+import com.alee.extended.list.CheckBoxListModel;
+import com.alee.extended.list.WebCheckBoxList;
+import com.alee.extended.panel.CenterPanel;
 import com.alee.extended.panel.GroupPanel;
+import com.alee.extended.panel.GroupingType;
 import com.alee.extended.panel.WebButtonGroup;
 import com.alee.extended.tab.DocumentData;
 import com.alee.extended.tab.WebDocumentPane;
+import com.alee.extended.window.WebPopOver;
 import com.alee.global.StyleConstants;
 import com.alee.laf.WebLookAndFeel;
 import com.alee.laf.button.WebButton;
@@ -32,21 +40,27 @@ import com.alee.laf.menu.WebMenuItem;
 import com.alee.laf.menu.WebPopupMenu;
 import com.alee.laf.optionpane.WebOptionPane;
 import com.alee.laf.panel.WebPanel;
+import com.alee.laf.rootpane.WebDialog;
 import com.alee.laf.scroll.WebScrollPane;
+import com.alee.laf.text.WebPasswordField;
 import com.alee.laf.text.WebTextField;
 import com.alee.laf.toolbar.ToolbarStyle;
 import com.alee.laf.toolbar.WebToolBar;
 import com.alee.managers.hotkey.Hotkey;
+import com.alee.managers.hotkey.HotkeyManager;
 import com.alee.utils.SwingUtils;
 import java.awt.BorderLayout;
 import static java.awt.BorderLayout.SOUTH;
 import java.awt.CardLayout;
 import java.awt.CheckboxMenuItem;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -54,6 +68,7 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Box;
@@ -89,6 +104,7 @@ public class UWGuiNew extends javax.swing.JFrame {
 
     private FacebookUser _fBUser;
     WebButton _loginFBbtn;
+    WebButton _registerBtn;
     FBLoginJFrame _fBLoginJFrame;
 
     private WebPanel bottomPane;
@@ -302,7 +318,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         serverPort.setBounds(50, 80, 300, 25);
 
         _loginFBbtn = new WebButton("Login with Facebook");
-        _loginFBbtn.setBounds(100, 115, 200, 30);
+        _loginFBbtn.setBounds(50, 115, 180, 30);
         _loginFBbtn.addActionListener(new ActionListener() {
 
             @Override
@@ -317,12 +333,30 @@ public class UWGuiNew extends javax.swing.JFrame {
                 }
             }
         });
-        //WebButton button = new WebButton("Connect");
+        
+        _registerBtn = new WebButton("Register");
+        _registerBtn.setBounds(230, 115, 100, 30);
+        _registerBtn.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
+                WebLookAndFeel.setDecorateDialogs ( true );
+                
+                RegisterDialog registerDialog = new RegisterDialog();
+                registerDialog.pack();
+                registerDialog.setLocationRelativeTo(null);
+                registerDialog.setVisible(true);
+                
+                WebLookAndFeel.setDecorateDialogs ( decorateFrames );
+            }
+        });
 
         loginFormPan.add(label);
         loginFormPan.add(serverAddr);
-        loginFormPan.add(serverPort);
+        loginFormPan.add(serverPort);        
         loginFormPan.add(_loginFBbtn);
+        loginFormPan.add(_registerBtn);
 
         loginPane.add(loginFormPan);
         loginPane.add(filler2);
@@ -510,6 +544,119 @@ public class UWGuiNew extends javax.swing.JFrame {
         panel.add(ret);
         panel.add(filler4);
     }
+    
+    public Component getShareComponent(){
+        
+        //Left Check list view
+        final CheckBoxListModel model = new CheckBoxListModel ();    
+        
+            //Set Element
+        model.addCheckBoxElement ( "Element 1", true );
+        model.addCheckBoxElement ( "Element 2" );
+        model.addCheckBoxElement ( "Element 3" );
+        model.addCheckBoxElement ( "Some other text" );
+        model.addCheckBoxElement ( "One more line" );
+        model.addCheckBoxElement ( "And one more" );
+        model.addCheckBoxElement ( "Last one" );        
+        WebCheckBoxList leftWebCheckBoxList = new WebCheckBoxList ( model );
+        leftWebCheckBoxList.setVisibleRowCount ( 4 );
+        leftWebCheckBoxList.setSelectedIndex ( 0 );
+        leftWebCheckBoxList.setEditable ( false );        
+        
+        final WebPanel panel1 = new WebPanel ( true );
+        panel1.setPaintFocus ( true );        
+        panel1.setMargin ( 10 );
+        panel1.add ( new WebLabel ( "People to share", WebLabel.CENTER ), BorderLayout.NORTH );
+        panel1.add ( new GroupPanel ( new WebScrollPane ( leftWebCheckBoxList )) , BorderLayout.CENTER );
+        
+ 
+        
+
+        //Right panel
+        final CheckBoxListModel modelRight = new CheckBoxListModel ();        
+        
+        modelRight.addCheckBoxElement ( "Element which" );        
+        WebCheckBoxList rightWebCheckBoxList = new WebCheckBoxList ( modelRight );
+        rightWebCheckBoxList.setVisibleRowCount ( 4 );
+        rightWebCheckBoxList.setSelectedIndex ( 0 );
+        rightWebCheckBoxList.setEditable ( false );        
+        
+        final WebPanel panel2 = new WebPanel ( true );        
+        panel2.setPaintFocus ( true );       
+        panel2.setMargin ( 10 );
+        panel2.add ( new WebLabel ( "Shared people", WebLabel.CENTER ), BorderLayout.NORTH );
+        panel2.add ( new GroupPanel ( new WebScrollPane ( rightWebCheckBoxList )), BorderLayout.CENTER );
+        
+        //Middle buttons
+        WebButton addButton = new WebButton(">");
+        addButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               List<Object> elements = model.getCheckedValues();
+               for(int i = 0; i < model.size(); i++){
+                  for(int j = 0; j < elements.size(); j++){
+                      if(model.get(i).getUserObject().equals(elements.get(j))){
+                          modelRight.addCheckBoxElement(elements.get(j));
+                          model.remove(i);
+                      }
+                  }
+               }
+            }
+        });
+        WebButton removeButton = new WebButton("<");
+        removeButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               List<Object> elements = modelRight.getCheckedValues();
+               for(int i = 0; i < modelRight.size(); i++){
+                  for(int j = 0; j < elements.size(); j++){
+                      if(modelRight.get(i).getUserObject().equals(elements.get(j))){
+                          model.addCheckBoxElement(elements.get(j));
+                          modelRight.remove(i);
+                      }
+                  }
+               }
+            }
+        });
+        GroupPanel middleButtons = new GroupPanel(false,addButton,removeButton );       
+        
+        SwingUtils.equalizeComponentsWidths(panel1,panel2);
+        
+        return new GroupPanel ( 3, panel1, middleButtons, panel2 );
+        
+    }
+    
+    ActionListener shareActionListener = new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            final WebPopOver popOver = new WebPopOver();      
+            popOver.setCloseOnFocusLoss ( true );
+            popOver.setMargin ( 10 );
+            popOver.setLayout ( new VerticalFlowLayout () ); 
+            final WebLabel titleLabel = new WebLabel ( "Share", WebLabel.CENTER );
+            final WebButton closeButton = new WebButton ( resources.loadIcon( "resources/cross.png" ), new ActionListener ()
+            {
+                @Override
+                public void actionPerformed ( final ActionEvent e )
+                {
+                    popOver.dispose ();
+                }
+            } ).setUndecorated ( true );
+            popOver.add ( new GroupPanel ( GroupingType.fillFirstAndLast, 4, titleLabel, closeButton ).setMargin ( 0, 0, 10, 0 ) );
+            popOver.add(getShareComponent());
+            
+            // Get the size of the screen
+            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+
+            int x = (dim.width)/2;
+            int y = (dim.height)/2;
+
+            popOver.show(x,y);
+        }
+    };
 
     private void addEditor(JPanel panel) {
         panel.setLayout(new BorderLayout());
@@ -524,6 +671,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         shareMenuItem = new WebMenuItem("Share...", resources.loadIcon("resources/share.png"));
         fileMenu.add(shareMenuItem);
         fileMenu.addSeparator();
+        shareMenuItem.addActionListener(shareActionListener);
 
         newMenuItem = new WebMenuItem("New", resources.loadIcon("resources/new.png"));
         fileMenu.add(newMenuItem);
@@ -892,4 +1040,55 @@ public class UWGuiNew extends javax.swing.JFrame {
             }
         }
     }
+    
+    private class RegisterDialog extends WebDialog
+    {
+        public RegisterDialog ()
+        {
+            super ();
+            this.setTitle("Register");            
+            setDefaultCloseOperation ( WebDialog.DISPOSE_ON_CLOSE );
+            setResizable ( false );
+            setModal ( true );
+
+            TableLayout layout = new TableLayout ( new double[][]{ { TableLayout.PREFERRED, TableLayout.FILL },                
+                    { TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED,TableLayout.PREFERRED } } );
+            layout.setHGap ( 5 );
+            layout.setVGap ( 5 );
+            WebPanel content = new WebPanel ( layout );
+            content.setMargin ( 15, 30, 15, 30 );
+            content.setOpaque ( false );
+
+            content.add ( new WebLabel ( "UserName", WebLabel.TRAILING ), "0,0" );
+            content.add ( new WebTextField ( 15 ), "1,0" );
+            
+            content.add ( new WebLabel ( "Email", WebLabel.TRAILING ), "0,1" );
+            content.add ( new WebTextField ( 15 ), "1,1" );
+
+            content.add ( new WebLabel ( "Password", WebLabel.TRAILING ), "0,2" );
+            content.add ( new WebPasswordField ( 15 ), "1,2" );
+
+            WebButton register = new WebButton ( "Register" );
+            WebButton cancel = new WebButton ( "Cancel" );
+            ActionListener listener = new ActionListener ()
+            {
+                @Override
+                public void actionPerformed ( ActionEvent e )
+                {
+                    setVisible ( false );
+                }
+            };
+            register.addActionListener ( listener );
+            cancel.addActionListener ( listener );
+            content.add ( new CenterPanel ( new GroupPanel ( 5, register, cancel ) ), "0,3,1,2" );
+            SwingUtils.equalizeComponentsWidths ( register, cancel );
+
+            add ( content );
+
+            HotkeyManager.registerHotkey ( this, register, Hotkey.ESCAPE );
+            HotkeyManager.registerHotkey ( this, register, Hotkey.ENTER );
+        }
+    }
 }
+
+
