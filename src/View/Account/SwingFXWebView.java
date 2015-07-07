@@ -70,8 +70,6 @@ public class SwingFXWebView extends javax.swing.JPanel
         _swingButton.setText("Reload");  
          
         add(_swingButton, BorderLayout.SOUTH);
-        
-        CookieHandler.setDefault(new CookieManager());
     }
 
     /**
@@ -134,6 +132,8 @@ public class SwingFXWebView extends javax.swing.JPanel
             
             _jfxPanel.setScene(scene); 
             _webEngine.load(url);
+            
+            CookieHandler.setDefault(new CookieManager());
         });  
     }
     
