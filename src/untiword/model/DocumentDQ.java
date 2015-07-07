@@ -58,7 +58,7 @@ public class DocumentDQ {
         DocxDocument viewCopy = syncCopy;
         
         for(ServerRequestDQ localChange : localQueue) {
-            applyChange(viewCopy, localChange);
+            //applyChange(viewCopy, localChange);
         }
         
         return viewCopy;
@@ -106,18 +106,20 @@ public class DocumentDQ {
         ServerRequestDQ request = new ServerRequestDQ(requestText);
         lastMessageReceived = requestText;
         
-        // Update the synchronized version
-        applyChange(syncCopy, request);
-        syncVersion = request.getVersionID();
-        
+        /* Awaiting  step */
         // If own request -> remove and continue
         if(request.getUserID().equals(userID)) {
             if(request.getRequestNumber() == localQueue.get(0).getRequestNumber()) {
                 localQueue.remove(0);
+                syncVersion = request.getVersionID();
                 return;
             } else {
                 throw new RuntimeException("Request ordering error");
             }
+        } else {
+            // Update the synchronized version
+            applyChange(syncCopy, request);
+            syncVersion = request.getVersionID();
         }
        
         // If someone else's request, update local queue

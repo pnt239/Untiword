@@ -71,6 +71,10 @@ public class UWEditor extends JScrollPane implements ActionListener {
     public int getNum() {
         return docNum;
     }
+    
+    public String getDocumentName() {
+        return this.docName;
+    }
 
     private void init() {
         // get the text pane
