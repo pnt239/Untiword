@@ -22,8 +22,7 @@ public class ServerMain {
      */
     public static void main(String[] args) {
         try {
-            String portNum = JOptionPane
-                    .showInputDialog("To start the server, please input a port number.");
+            String portNum = "3219";
             
             if (portNum.equals("")) {
                 JOptionPane
