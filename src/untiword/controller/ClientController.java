@@ -7,8 +7,6 @@ package untiword.controller;
 
 import untiword.events.AuthorizationListener;
 import com.alee.laf.optionpane.WebOptionPane;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -34,6 +32,7 @@ import untiword.events.NotFoundDocumentEvent;
 import untiword.events.NotFoundDocumentListener;
 import untiword.events.RenameDocumentEvent;
 import untiword.events.RenameDocumentListener;
+import untiword.events.ReturnDataListener;
 import untiword.model.ServerRequestDQ;
 import untiword.model.UserDQ;
 
@@ -54,6 +53,12 @@ public class ClientController {
     {
         _connectionResultListener = listener;
     }
+    
+    private ReturnDataListener _returnDataListener;
+    public void setReturnDataListener(ReturnDataListener listener)
+    {
+        _returnDataListener = listener;
+    }
 
     private HashMap<Integer, UWEditor> docIDtoDocPanel;
     private UserDQ user;
@@ -63,15 +68,15 @@ public class ClientController {
     private MessageHandlingThread MHT;
     private int ignoreNext = 0;
 
-    private ArrayList<RenameDocumentListener> renameListenerList = new ArrayList<RenameDocumentListener>();
-    private ArrayList<NotFoundDocumentListener> notFoundDocListenerList = new ArrayList<NotFoundDocumentListener>();
-    private ArrayList<ListDocumentListener> listDocListenerList = new ArrayList<ListDocumentListener>();
-    private ArrayList<String> documentIdAndNames = new ArrayList<String>();
+    private ArrayList<RenameDocumentListener> renameListenerList = new ArrayList<>();
+    private ArrayList<NotFoundDocumentListener> notFoundDocListenerList = new ArrayList<>();
+    private ArrayList<ListDocumentListener> listDocListenerList = new ArrayList<>();
+    private ArrayList<String> documentIdAndNames = new ArrayList<>();
 
     private CreateDocumentListener docListener;
 
     public ClientController() {
-        docIDtoDocPanel = new HashMap<Integer, UWEditor>();
+        docIDtoDocPanel = new HashMap<>();
     }
 
     public synchronized void addRenameDocumentListener(RenameDocumentListener listener) {
@@ -99,42 +104,35 @@ public class ClientController {
     public void connectToServer(String server, String port) throws UnknownHostException, IOException {
         try {
             setServerSocket(new Socket(server, Integer.parseInt(port)));
+            out = new PrintWriter(getServerSocket().getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(getServerSocket()
+                    .getInputStream()));
+
+            handleServerGreeting();
+
+            MHT = new MessageHandlingThread(this, in);
+            MHT.start();
+
+            this.sendMessage(this.createControlMessage("getdoclist", -1, ""));
         } catch (NumberFormatException e) {
-            WebOptionPane
-                    .showMessageDialog(null,
-                            "Connection failed. Please double check your server address and port number.");
+            WebOptionPane.showMessageDialog(null, "Connection failed. Please double check your server address and port number.");
             if(_connectionResultListener != null)
             {
                 _connectionResultListener.connectFailed();
             }
         } catch (UnknownHostException e) {
-            WebOptionPane
-                    .showMessageDialog(null,
-                            "Connection failed. Please double check your server address and port number.");
+            WebOptionPane.showMessageDialog(null, "Connection failed. Please double check your server address and port number.");
             if(_connectionResultListener != null)
             {
                 _connectionResultListener.connectFailed();
             }
         } catch (IOException e) {
-            WebOptionPane
-                    .showMessageDialog(null,
-                            "Connection failed. Please double check your server address and port number.");
+            WebOptionPane.showMessageDialog(null, "Connection failed. Please double check your server address and port number.");
             if(_connectionResultListener != null)
             {
                 _connectionResultListener.connectFailed();
             }
         }
-
-        out = new PrintWriter(getServerSocket().getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(getServerSocket()
-                .getInputStream()));
-
-        handleServerGreeting();
-
-        MHT = new MessageHandlingThread(this, in);
-        MHT.start();
-
-        this.sendMessage(this.createControlMessage("getdoclist", -1, ""));
     }
 
     /**
@@ -149,56 +147,55 @@ public class ClientController {
             String[] splitString = line.split("\\|");
             String reqType = splitString[1];
 
-            if (reqType.equals("ERROR")) {
-                WebOptionPane.showMessageDialog(null, "SsplitString[2]", "Error", WebOptionPane.ERROR_MESSAGE);
-                //JOptionPane.showMessageDialog(tabbedPane, splitString[2]);                
-            } else if (reqType.equals("DOCRENAMED")) {
-                String[] broken = splitString[2].split("~");
-                UWEditor docToRename = docIDtoDocPanel.get(Integer
-                        .parseInt(broken[0]));
-                processRenameEvent(new RenameDocumentEvent(docToRename, broken[1]));
-            } else if (reqType.equals("DOCLIST")) {
-
-                // Send new info to new doc panel, send as list loading
-                // label into list
-                if (splitString.length < 3) {
-                    //Show second without list..... Quang
-                    processNotFoundEvent(new NotFoundDocumentEvent());
-                } else {
-                    documentIdAndNames.removeAll(documentIdAndNames);
-                    String[] docNames = new String[splitString.length - 2];
-                    for (int i = 2; i < splitString.length; i++) {
-                        documentIdAndNames.add(splitString[i]);
-                        docNames[i - 2] = splitString[i].split("~")[1];
-                    }
-                    //Show second with list
-                    processListDocEvent(new ListDocumentEvent(docNames));
-                }
-
-            } else if (reqType.equals("REQNEWPROCESSED")) {
-                // create a new doc with the new name pass to method close +,
-                // reopen
-                // update userDQ with new doc, send a load message
-                String[] splitDoc = splitString[2].split("~");
-                
-
-                UWEditor newDocWindow = new UWEditor(Integer.parseInt(splitDoc[0]), splitDoc[1], this);
-                getUser().addDocument(Integer.parseInt(splitDoc[0]), (DocxDocument)newDocWindow.getTextPane().getDocument());
-                newDocWindow.setVisible(true);
-                docListener.getUWPanel(newDocWindow);
-//                DocPanel newDocWindow = new DocPanel(
+            switch (reqType) {
+                case "ERROR":
+                    WebOptionPane.showMessageDialog(null, "SsplitString[2]", "Error", WebOptionPane.ERROR_MESSAGE);
+                    //JOptionPane.showMessageDialog(tabbedPane, splitString[2]);                
+                    break;
+                case "DOCRENAMED":
+                    String[] broken = splitString[2].split("~");
+                    UWEditor docToRename = docIDtoDocPanel.get(Integer
+                            .parseInt(broken[0]));
+                    processRenameEvent(new RenameDocumentEvent(docToRename, broken[1]));
+                    break;
+                case "DOCLIST":
+                    // Send new info to new doc panel, send as list loading
+                    // label into list
+                    if (splitString.length < 3) {
+                        //Show second without list..... Quang
+                        processNotFoundEvent(new NotFoundDocumentEvent());
+                    } else {
+                        documentIdAndNames.removeAll(documentIdAndNames);
+                        String[] docNames = new String[splitString.length - 2];
+                        for (int i = 2; i < splitString.length; i++) {
+                            documentIdAndNames.add(splitString[i]);
+                            docNames[i - 2] = splitString[i].split("~")[1];
+                        }
+                        //Show second with list
+                        processListDocEvent(new ListDocumentEvent(docNames));
+                    }   break;
+                case "REQNEWPROCESSED":
+                    // create a new doc with the new name pass to method close +,
+                    // reopen
+                    // update userDQ with new doc, send a load message
+                    String[] splitDoc = splitString[2].split("~");
+                    UWEditor newDocWindow = new UWEditor(Integer.parseInt(splitDoc[0]), splitDoc[1], this);
+                    getUser().addDocument(Integer.parseInt(splitDoc[0]), (DocxDocument)newDocWindow.getTextPane().getDocument());
+                    newDocWindow.setVisible(true);
+                    docListener.getUWPanel(newDocWindow);
+                    //                DocPanel newDocWindow = new DocPanel(
 //                        Integer.parseInt(splitDoc[0]), splitDoc[1], this);
-                this.docIDtoDocPanel.put(newDocWindow.getNum(), newDocWindow);
-//                tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
+                    this.docIDtoDocPanel.put(newDocWindow.getNum(), newDocWindow);
+                    //                tabbedPane.setComponentAt(tabbedPane.getTabCount() - 1,
 //                        newDocWindow);
 //                tabbedPane.setTitleAt(tabbedPane.getTabCount() - 1,
 //                        newDocWindow.getName());
 //                tabbedPane.add("Open/Create", new NewDocPanel(this));
 //                initTabComponent(tabbedPane.getTabCount() - 2);
 //                tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 2);
-                this.sendMessage(createControlMessage("load",
+                    this.sendMessage(createControlMessage("load",
                         Integer.parseInt(splitDoc[0]), splitDoc[1]));
-
+                    break;
             }
 
         } 
@@ -218,6 +215,17 @@ public class ClientController {
                 {
                     _authorizationListener.authorizeFailed();
                 }               
+            }
+        }
+        else if(line.startsWith("CUSTOM_REQUEST/RETURN"))
+        {
+            CustomRequest request = new CustomRequest(line);
+            if(request.getValue("type").equals("loginUsers"))
+            {
+                if(_returnDataListener != null)
+                {
+                    _returnDataListener.loginUsersReturned(request.getValue("value"));
+                }
             }
         }
         else {
@@ -246,7 +254,7 @@ public class ClientController {
             DocxDocument document = (DocxDocument) panelToUpdate.getTextPane().getDocument();
             JTextPane tempPane = panelToUpdate.getTextPane();
 
-            ServerRequestDQ newSelection = null;
+            ServerRequestDQ newSelection;
 
             // insert message
             if (tempPane.getSelectionStart() == tempPane.getSelectionEnd()) {
@@ -303,16 +311,17 @@ public class ClientController {
         if (docName.equals("")) {
             docName = "document";
         }
-        if (messageType.equals("requestNew")) {
-            return prefix + "|REQUESTNEW|" + docName;
-        } else if (messageType.equals("getdoclist")) {
-            return prefix + "|GETDOCLIST";
-        } else if (messageType.equals("close")) {
-            return prefix + "|CLOSE|" + docID;
-        } else if (messageType.equals("rename")) {
-            return prefix + "|RENAME|" + docID + "~" + docName;
-        } else if (messageType.equals("load")) {
-            return prefix + "|LOAD|" + docID;
+        switch (messageType) {
+            case "requestNew":
+                return prefix + "|REQUESTNEW|" + docName;
+            case "getdoclist":
+                return prefix + "|GETDOCLIST";
+            case "close":
+                return prefix + "|CLOSE|" + docID;
+            case "rename":
+                return prefix + "|RENAME|" + docID + "~" + docName;
+            case "load":
+                return prefix + "|LOAD|" + docID;
         }
         return null;
     }
@@ -471,12 +480,38 @@ public class ClientController {
 
     public void authorize(String accessToken) 
     {
-        CustomRequest request = new CustomRequest(3);
-        request.setAction("AUTHORIZE");
-        request.setValue("applicationId", getUser().getUserID());
-        request.setValue("loginType", "Facebook");
-        request.setValue("accessToken", accessToken);
-        
-        sendMessage(request.toString());
+        if(getUser() != null)
+        {
+            CustomRequest request = new CustomRequest(3);
+            request.setAction("AUTHORIZE");
+            request.setValue("applicationId", getUser().getUserID());
+            request.setValue("loginType", "Facebook");
+            request.setValue("accessToken", accessToken);
+            sendMessage(request.toString());
+        }     
+    }
+    
+    public void logout(String accessToken)
+    {
+        if(getUser() != null)
+        {
+            CustomRequest request = new CustomRequest(3);
+            request.setAction("LOGOUT");
+            request.setValue("applicationId", getUser().getUserID());
+            request.setValue("accessToken", accessToken);
+            sendMessage(request.toString());
+        }     
+    }
+    
+    public void requestLoginUsers()
+    {
+        if(getUser() != null)
+        {
+            CustomRequest request = new CustomRequest(2);
+            request.setAction("GET");
+            request.setValue("applicationId", getUser().getUserID());
+            request.setValue("type", "loginUsers");
+            sendMessage(request.toString());
+        }
     }
 }

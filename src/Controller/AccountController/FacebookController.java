@@ -228,6 +228,11 @@ public class FacebookController
         return result;
     }
     
+    public String getPicture(String userId)
+    {
+        return "http://graph.facebook.com/" + userId + "/picture";
+    }
+    
     public FacebookUser getUser(String accessToken)
     {
         FacebookUser result = null;
@@ -236,6 +241,7 @@ public class FacebookController
         {
             FacebookClient fc = new DefaultFacebookClient(accessToken);
             result = new FacebookUser(fc.fetchObject("me", User.class), accessToken);
+            result.setPicture(getPicture(result.getUid()));
         }
         catch(Exception e)
         {

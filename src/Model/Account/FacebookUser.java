@@ -76,14 +76,15 @@ public class FacebookUser
         return _user.getId();
     }    
     
+    private String _picture;
     public String getPicture()
+    {  
+        return _picture;
+    }
+    
+    public void setPicture(String value)
     {
-        if(_user != null)
-        {
-            return _user.getPicture().getUrl();
-        }
-        
-        return "";
+        _picture = value;
     }
     
     public FacebookUser(User user, String accessToken)

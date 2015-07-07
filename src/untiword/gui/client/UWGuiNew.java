@@ -5,17 +5,15 @@
  */
 package untiword.gui.client;
 
-import Controller.AccountController.AccountController;
 import Model.Account.FacebookUser;
+import Server.BusinessLogicLayer.AccountBlo;
 import View.Account.FBLoginJFrame;
 import View.Account.FBLoginJFrameEventListener;
 import com.alee.extended.breadcrumb.WebBreadcrumb;
-import com.alee.extended.breadcrumb.WebBreadcrumbButton;
 import com.alee.extended.breadcrumb.WebBreadcrumbToggleButton;
 import com.alee.extended.button.WebSplitButton;
 import com.alee.extended.layout.TableLayout;
 import com.alee.extended.layout.VerticalFlowLayout;
-import com.alee.extended.list.CheckBoxCellData;
 import com.alee.extended.list.CheckBoxListModel;
 import com.alee.extended.list.WebCheckBoxList;
 import com.alee.extended.panel.CenterPanel;
@@ -26,20 +24,17 @@ import com.alee.extended.panel.WebButtonGroup;
 import com.alee.extended.tab.DocumentData;
 import com.alee.extended.tab.WebDocumentPane;
 import com.alee.extended.window.WebPopOver;
-import com.alee.global.StyleConstants;
 import com.alee.laf.WebLookAndFeel;
 import com.alee.laf.button.WebButton;
 import com.alee.laf.button.WebToggleButton;
 import com.alee.laf.combobox.WebComboBox;
 import com.alee.laf.label.WebLabel;
-import com.alee.laf.list.WebList;
 import com.alee.laf.list.WebListModel;
 import com.alee.laf.menu.WebCheckBoxMenuItem;
 import com.alee.laf.menu.WebMenu;
 import com.alee.laf.menu.WebMenuBar;
 import com.alee.laf.menu.WebMenuItem;
 import com.alee.laf.menu.WebPopupMenu;
-import com.alee.laf.optionpane.WebOptionPane;
 import com.alee.laf.panel.WebPanel;
 import com.alee.laf.rootpane.WebDialog;
 import com.alee.laf.scroll.WebScrollPane;
@@ -49,18 +44,15 @@ import com.alee.laf.toolbar.ToolbarStyle;
 import com.alee.laf.toolbar.WebToolBar;
 import com.alee.managers.hotkey.Hotkey;
 import com.alee.managers.hotkey.HotkeyManager;
+import com.alee.managers.notification.NotificationManager;
 import com.alee.utils.SwingUtils;
 import java.awt.BorderLayout;
-import static java.awt.BorderLayout.SOUTH;
 import java.awt.CardLayout;
-import java.awt.CheckboxMenuItem;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -68,20 +60,20 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.xpath.XPathExpressionException;
+import org.xml.sax.SAXException;
 import untiword.components.UWDocumentElement;
 import untiword.utils.Resources;
 import untiword.components.UWEditor;
@@ -89,14 +81,10 @@ import untiword.components.UWListView;
 import untiword.components.docx.DocxDocument;
 import untiword.controller.ClientController;
 import untiword.events.AuthorizationListener;
-import untiword.events.ConnectionResultListener;
-import untiword.events.CreateDocumentListener;
 import untiword.events.ListDocumentEvent;
-import untiword.events.ListDocumentListener;
 import untiword.events.NotFoundDocumentEvent;
-import untiword.events.NotFoundDocumentListener;
 import untiword.events.RenameDocumentEvent;
-import untiword.events.RenameDocumentListener;
+import untiword.events.ReturnDataListener;
 import untiword.model.DocumentIDsAndNames;
 
 /**
@@ -106,9 +94,13 @@ import untiword.model.DocumentIDsAndNames;
 public class UWGuiNew extends javax.swing.JFrame {
 
     private FacebookUser _fBUser;
-    WebButton _loginFBbtn;
-    WebButton _registerBtn;
-    FBLoginJFrame _fBLoginJFrame;
+    private WebButton _loginFBbtn;
+    private WebButton _registerBtn;
+    private FBLoginJFrame _fBLoginJFrame;
+    private ImageIcon _i1;
+    private WebLabel _userNameLabel;
+    private WebLabel _emailLabel;
+    private HashMap<String, String> _loginUsers;
 
     private WebPanel bottomPane;
     private WebBreadcrumb breadcrumb;
@@ -227,7 +219,21 @@ public class UWGuiNew extends javax.swing.JFrame {
     public UWGuiNew() {
         initComponents();
         createClient();
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
     }
+    
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {                                   
+        // TODO add your handling code here:
+        if(_fBUser != null)
+        {
+             clientController.logout(_fBUser.getAccessToken());
+        }    
+    }            
 
     private void initComponents() {
         // Init variable
@@ -258,24 +264,17 @@ public class UWGuiNew extends javax.swing.JFrame {
         bottomPane.setUndecorated(false);
         bottomPane.setMargin(new Insets(3, 3, 3, 3));
 
-        ActionListener getDocActionListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (isConnect) {
-                    clientController.sendMessage(clientController.createControlMessage("getdoclist", 0, ""));
-                    System.out.println(e.getActionCommand());
-                }
+        ActionListener getDocActionListener = (ActionEvent e) -> {
+            if (isConnect) {
+                clientController.sendMessage(clientController.createControlMessage("getdoclist", 0, ""));
+                System.out.println(e.getActionCommand());
             }
         };
 
-        breadcrumbAction = new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                CardLayout cl = (CardLayout) (centerPane.getLayout());
-                WebBreadcrumbToggleButton button = (WebBreadcrumbToggleButton) e.getSource();
-                cl.show(centerPane, button.getName());
-            }
+        breadcrumbAction = (ActionEvent e) -> {
+            CardLayout cl = (CardLayout) (centerPane.getLayout());
+            WebBreadcrumbToggleButton button = (WebBreadcrumbToggleButton) e.getSource();
+            cl.show(centerPane, button.getName());
         };
 
         loginBreadcrumb.setSelected(true);
@@ -326,37 +325,29 @@ public class UWGuiNew extends javax.swing.JFrame {
 
         _loginFBbtn = new WebButton("Login with Facebook");
         _loginFBbtn.setBounds(50, 115, 180, 30);
-        _loginFBbtn.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    _fBLoginJFrame = new FBLoginJFrame();
-                    _fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                    _fBLoginJFrame.setVisible(true);
-                    setFBLoginJFrameEventListener(_fBLoginJFrame, _loginFBbtn);
-                } catch (MalformedURLException ex) {
-                    Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
-                }
+        _loginFBbtn.addActionListener((ActionEvent e) -> {
+            try {
+                _fBLoginJFrame = new FBLoginJFrame();
+                _fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                _fBLoginJFrame.setVisible(true);
+                setFBLoginJFrameEventListener(_fBLoginJFrame, _loginFBbtn);
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         
         _registerBtn = new WebButton("Register");
         _registerBtn.setBounds(230, 115, 100, 30);
-        _registerBtn.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
-                WebLookAndFeel.setDecorateDialogs ( true );
-                
-                RegisterDialog registerDialog = new RegisterDialog();
-                registerDialog.pack();
-                registerDialog.setLocationRelativeTo(null);
-                registerDialog.setVisible(true);
-                
-                WebLookAndFeel.setDecorateDialogs ( decorateFrames );
-            }
+        _registerBtn.addActionListener((ActionEvent e) -> {
+            boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
+            WebLookAndFeel.setDecorateDialogs ( true );
+            
+            RegisterDialog registerDialog = new RegisterDialog();
+            registerDialog.pack();
+            registerDialog.setLocationRelativeTo(null);
+            registerDialog.setVisible(true);
+            
+            WebLookAndFeel.setDecorateDialogs ( decorateFrames );
         });
 
         loginFormPan.add(label);
@@ -387,50 +378,33 @@ public class UWGuiNew extends javax.swing.JFrame {
 
     private void createClient() {
         clientController = new ClientController();
-        clientController.addNotFoundListener(new NotFoundDocumentListener() {
+        clientController.addNotFoundListener((NotFoundDocumentEvent event) -> {
+            docsListViewModel.removeAllElements();
+            //docsListViewModel.addElement("There are no documents on the server.");
+            docsListViewModel.addElement(new UWDocumentElement(resources.loadIcon("resources/document-add.png"), "New Document"));
+        });
 
-            @Override
-            public void NotFoundDocument(NotFoundDocumentEvent event) {
-                docsListViewModel.removeAllElements();
-                //docsListViewModel.addElement("There are no documents on the server.");
-                docsListViewModel.addElement(new UWDocumentElement(resources.loadIcon("resources/document-add.png"), "New Document"));
+        clientController.addRenameDocumentListener((RenameDocumentEvent event) -> {
+            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        });
+
+        clientController.addListDocumentListener((ListDocumentEvent event) -> {
+            docsListViewModel.removeAllElements();
+            docsListViewModel.addElement(new UWDocumentElement(resources.loadIcon("resources/document-add.png"), "New Document"));
+            
+            String[] docs = event.DocumentNameList();
+            for (String doc : docs) {
+                docsListViewModel.addElement(new UWDocumentElement(resources.loadIcon("resources/compose.png"), doc));
             }
         });
 
-        clientController.addRenameDocumentListener(new RenameDocumentListener() {
-
-            @Override
-            public void RenameDocument(RenameDocumentEvent event) {
-                //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-        });
-
-        clientController.addListDocumentListener(new ListDocumentListener() {
-
-            @Override
-            public void ListDocument(ListDocumentEvent event) {
-                
-                docsListViewModel.removeAllElements();
-                docsListViewModel.addElement(new UWDocumentElement(resources.loadIcon("resources/document-add.png"), "New Document"));
-                
-                String[] docs = event.DocumentNameList();
-                for (String doc : docs) {
-                    docsListViewModel.addElement(new UWDocumentElement(resources.loadIcon("resources/compose.png"), doc));
-                }
-            }
-        });
-
-        clientController.setCreateDocumentListener(new CreateDocumentListener() {
-
-            @Override
-            public void getUWPanel(UWEditor editor) {
-                editBreadcrumb.setSelected(true);
-                String num = "" + editor.getNum();
-                docmentPane.openDocument(new DocumentData(num, editor.getDocumentName(), editor));
-
-                CardLayout cl = (CardLayout) (centerPane.getLayout());
-                cl.show(centerPane, "EditCard");
-            }
+        clientController.setCreateDocumentListener((UWEditor editor) -> {
+            editBreadcrumb.setSelected(true);
+            String num = "" + editor.getNum();
+            docmentPane.openDocument(new DocumentData(num, editor.getDocumentName(), editor));
+            
+            CardLayout cl = (CardLayout) (centerPane.getLayout());
+            cl.show(centerPane, "EditCard");
         });
         
         clientController.setAuthorizationListener(new AuthorizationListener() {
@@ -439,12 +413,28 @@ public class UWGuiNew extends javax.swing.JFrame {
             public void authorizeSucess() 
             {
                 try
-                {
+                {                    
+                    _userNameLabel.setText(_fBUser.getName());
+                    _emailLabel.setText(_fBUser.getEmail());
+//                    try 
+//                    {
+//                        String _URL = _fBUser.getPicture();
+//                        URL url = new URL(_URL);
+//                        BufferedImage img = ImageIO.read(url);
+//                        _i1 = new ImageIcon(img);
+//                    } catch (MalformedURLException ex) {
+//                        Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
+//                    } catch (IOException ex) {
+//                        Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
+//                    }     
+                    
                     CardLayout cl = (CardLayout) (centerPane.getLayout());
                     cl.show(centerPane, "OpenCard");
                     openBreadcrumb.setSelected(true);
                     _loginFBbtn.setText("Log in as " + _fBUser.getName());                  
                     isConnect = true;
+                    
+                    clientController.requestLoginUsers();
                 }
                 catch(Exception e)
                 {
@@ -461,14 +451,38 @@ public class UWGuiNew extends javax.swing.JFrame {
         clientController.setConnectionResultListener(() -> {
             try
             {
-                _fBLoginJFrame.close();
-                _fBLoginJFrame = new FBLoginJFrame();
-                _fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                _fBLoginJFrame.setVisible(false);
+//                _fBLoginJFrame.close();
+//                _fBLoginJFrame = new FBLoginJFrame();
+//                _fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+//                _fBLoginJFrame.setVisible(false);
             }
             catch(Exception e)
             {
                 System.out.println(e.toString());
+            }
+        });
+        
+        clientController.setReturnDataListener(new ReturnDataListener() {
+
+            @Override
+            public void loginUsersReturned(String data) 
+            {
+                String[] parts = data.split("[|]");
+                if(parts.length % 2 == 0)
+                {
+                    _loginUsers = new HashMap<>(parts.length / 2);
+                    for(int i=0; i<parts.length; i++)
+                    {
+                        _loginUsers.put(parts[i], parts[i+1]);
+                        i++;
+                    }
+                }
+                System.out.println("Reveiced login user request: " + data);
+            }
+
+            @Override
+            public void documentsReturned(String data) {
+                
             }
         });
     }
@@ -490,27 +504,29 @@ public class UWGuiNew extends javax.swing.JFrame {
         accountPanel.setLayout(new TableLayout(sizeAccount));
         //ret.setRound ( StyleConstants.largeRound );
 
-        ImageIcon i1 = resources.loadIcon("resources/account.jpg");
-        WebDecoratedImage img1 = new WebDecoratedImage(i1);
+        
+        _i1 = resources.loadIcon("resources/account.jpg");
+        WebDecoratedImage img1 = new WebDecoratedImage(_i1);
         img1.setPreferredSize(new Dimension(50, 50));
 
-        WebLabel userNameLabel = new WebLabel("Not Login");
-        userNameLabel.setHorizontalAlignment(WebLabel.RIGHT);
-        userNameLabel.setFontSize(20);
-        userNameLabel.setBoldFont();
+        _userNameLabel = new WebLabel("Not login");
+        _userNameLabel.setHorizontalAlignment(WebLabel.RIGHT);
+        _userNameLabel.setFontSize(20);
+        _userNameLabel.setBoldFont();
 
-        WebLabel emailLabel = new WebLabel("");
-        emailLabel.setHorizontalAlignment(WebLabel.RIGHT);
+        _emailLabel = new WebLabel("");
+        _emailLabel.setHorizontalAlignment(WebLabel.RIGHT);
 
         accountPanel.add(img1, "2, 1, 2, 3");
-        accountPanel.add(userNameLabel, "0, 1, 0, 2");
-        accountPanel.add(emailLabel, "0, 3");
+        accountPanel.add(_userNameLabel, "0, 1, 0, 2");
+        accountPanel.add(_emailLabel, "0, 3");
 
-        docsListViewModel = new WebListModel<UWDocumentElement>();
+        docsListViewModel = new WebListModel<>();
         //docsListViewModel.add(new UWDocumentElement(resources.loadIcon("resources/document-add.png"), "New Document"));
         //docsListViewModel.add(new UWDocumentElement(resources.loadIcon("resources/compose.png"), "Thanh"));
         docListView = new UWListView(docsListViewModel);
         docListView.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent evt) {
                 if (evt.getClickCount() == 2) {
                     openDocument();
@@ -528,14 +544,16 @@ public class UWGuiNew extends javax.swing.JFrame {
         //Left Check list view
         final CheckBoxListModel model = new CheckBoxListModel ();    
         
-            //Set Element
-        model.addCheckBoxElement ( "Element 1", true );
-        model.addCheckBoxElement ( "Element 2" );
-        model.addCheckBoxElement ( "Element 3" );
-        model.addCheckBoxElement ( "Some other text" );
-        model.addCheckBoxElement ( "One more line" );
-        model.addCheckBoxElement ( "And one more" );
-        model.addCheckBoxElement ( "Last one" );        
+        //Set Element
+        if(_loginUsers != null)
+        {
+             String[] keys = _loginUsers.keySet().toArray(new String[_loginUsers.keySet().size()]);
+            for (int i=0; i<keys.length; i++) 
+            {
+                model.addCheckBoxElement (_loginUsers.get(keys[i]), false);
+            }
+        }
+       
         WebCheckBoxList leftWebCheckBoxList = new WebCheckBoxList ( model );
         leftWebCheckBoxList.setVisibleRowCount ( 4 );
         leftWebCheckBoxList.setSelectedIndex ( 0 );
@@ -553,7 +571,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         //Right panel
         final CheckBoxListModel modelRight = new CheckBoxListModel ();        
         
-        modelRight.addCheckBoxElement ( "Element which" );        
+        //modelRight.addCheckBoxElement ( "Element which" );        
         WebCheckBoxList rightWebCheckBoxList = new WebCheckBoxList ( modelRight );
         rightWebCheckBoxList.setVisibleRowCount ( 4 );
         rightWebCheckBoxList.setSelectedIndex ( 0 );
@@ -567,35 +585,27 @@ public class UWGuiNew extends javax.swing.JFrame {
         
         //Middle buttons
         WebButton addButton = new WebButton(">");
-        addButton.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-               List<Object> elements = model.getCheckedValues();
-               for(int i = 0; i < model.size(); i++){
-                  for(int j = 0; j < elements.size(); j++){
-                      if(model.get(i).getUserObject().equals(elements.get(j))){
-                          modelRight.addCheckBoxElement(elements.get(j));
-                          model.remove(i);
-                      }
-                  }
-               }
+        addButton.addActionListener((ActionEvent e) -> {
+            List<Object> elements = model.getCheckedValues();
+            for(int i = 0; i < model.size(); i++){
+                for (Object element : elements) {
+                    if (model.get(i).getUserObject().equals(element)) {
+                        modelRight.addCheckBoxElement(element);
+                        model.remove(i);
+                    }
+                }
             }
         });
         WebButton removeButton = new WebButton("<");
-        removeButton.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-               List<Object> elements = modelRight.getCheckedValues();
-               for(int i = 0; i < modelRight.size(); i++){
-                  for(int j = 0; j < elements.size(); j++){
-                      if(modelRight.get(i).getUserObject().equals(elements.get(j))){
-                          model.addCheckBoxElement(elements.get(j));
-                          modelRight.remove(i);
-                      }
-                  }
-               }
+        removeButton.addActionListener((ActionEvent e) -> {
+            List<Object> elements = modelRight.getCheckedValues();
+            for(int i = 0; i < modelRight.size(); i++){
+                for (Object element : elements) {
+                    if (modelRight.get(i).getUserObject().equals(element)) {
+                        model.addCheckBoxElement(element);
+                        modelRight.remove(i);
+                    }
+                }
             }
         });
         GroupPanel middleButtons = new GroupPanel(false,addButton,removeButton );       
@@ -606,34 +616,24 @@ public class UWGuiNew extends javax.swing.JFrame {
         
     }
     
-    ActionListener shareActionListener = new ActionListener() {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            final WebPopOver popOver = new WebPopOver();      
-            popOver.setCloseOnFocusLoss ( true );
-            popOver.setMargin ( 10 );
-            popOver.setLayout ( new VerticalFlowLayout () ); 
-            final WebLabel titleLabel = new WebLabel ( "Share", WebLabel.CENTER );
-            final WebButton closeButton = new WebButton ( resources.loadIcon( "resources/cross.png" ), new ActionListener ()
-            {
-                @Override
-                public void actionPerformed ( final ActionEvent e )
-                {
-                    popOver.dispose ();
-                }
-            } ).setUndecorated ( true );
-            popOver.add ( new GroupPanel ( GroupingType.fillFirstAndLast, 4, titleLabel, closeButton ).setMargin ( 0, 0, 10, 0 ) );
-            popOver.add(getShareComponent());
-            
-            // Get the size of the screen
-            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-
-            int x = (dim.width)/2;
-            int y = (dim.height)/2;
-
-            popOver.show(x,y);
-        }
+    ActionListener shareActionListener = (ActionEvent e) -> 
+    {
+        clientController.requestLoginUsers();
+        final WebPopOver popOver = new WebPopOver();
+        popOver.setCloseOnFocusLoss ( true );
+        popOver.setMargin ( 10 );
+        popOver.setLayout ( new VerticalFlowLayout () );
+        final WebLabel titleLabel = new WebLabel ( "Share", WebLabel.CENTER );
+        final WebButton closeButton = new WebButton ( resources.loadIcon( "resources/cross.png" ), (final ActionEvent e1) -> {
+            popOver.dispose ();
+        }).setUndecorated ( true );
+        popOver.add ( new GroupPanel ( GroupingType.fillFirstAndLast, 4, titleLabel, closeButton ).setMargin ( 0, 0, 10, 0 ) );
+        popOver.add(getShareComponent());
+        // Get the size of the screen
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        int x1 = (dim.width)/2;
+        int y1 = (dim.height)/2;
+        popOver.show(x1, y1);
     };
 
 //    private void addOpenNewBK(JPanel panel) {
@@ -1072,8 +1072,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         if (newName.equals("Enter Document Name") || newName.equals("")) {
             newName = "New Document";
         }
-        clientController.sendMessage(clientController.createControlMessage("requestNew",
-                -1, newName));
+        clientController.sendMessage(clientController.createControlMessage("requestNew", -1, newName));
     }
 
     private void setFBLoginJFrameEventListener(FBLoginJFrame fBLoginJFrame, WebButton loginFBbtn) {
@@ -1087,7 +1086,7 @@ public class UWGuiNew extends javax.swing.JFrame {
                                 _fBUser = fBLoginJFrame.getUser();
                                 if (_fBUser != null) 
                                 {
-                                    fBLoginJFrame.close();
+                                    //fBLoginJFrame.close();
                                     try {
                                         Server = serverAddr.getText();
                                         Po = serverPort.getText();
@@ -1096,9 +1095,9 @@ public class UWGuiNew extends javax.swing.JFrame {
                                         clientController.connectToServer(Server, Po);
                                         clientController.authorize(_fBUser.getAccessToken()); 
                                         
-                                        CardLayout cl = (CardLayout) (centerPane.getLayout());
-                                        cl.show(centerPane, "OpenCard");
-                                        openBreadcrumb.setSelected(true);
+//                                        CardLayout cl = (CardLayout) (centerPane.getLayout());
+//                                        cl.show(centerPane, "OpenCard");
+//                                        openBreadcrumb.setSelected(true);
                                     } catch (IOException ex) {
                                         Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
                                     }
@@ -1137,25 +1136,36 @@ public class UWGuiNew extends javax.swing.JFrame {
             layout.setVGap ( 5 );
             WebPanel content = new WebPanel ( layout );
             content.setMargin ( 15, 30, 15, 30 );
-            content.setOpaque ( false );
-
-            content.add ( new WebLabel ( "UserName", WebLabel.TRAILING ), "0,0" );
-            content.add ( new WebTextField ( 15 ), "1,0" );
+            content.setOpaque ( false );          
             
-            content.add ( new WebLabel ( "Email", WebLabel.TRAILING ), "0,1" );
-            content.add ( new WebTextField ( 15 ), "1,1" );
-
-            content.add ( new WebLabel ( "Password", WebLabel.TRAILING ), "0,2" );
-            content.add ( new WebPasswordField ( 15 ), "1,2" );
+            content.add (new WebLabel ( "Email", WebLabel.TRAILING ), "0,1" );
+            WebTextField wtfEmail = new WebTextField ( 15 );
+            content.add ( wtfEmail, "1,1" );
+            
+            content.add (new WebLabel ( "Password", WebLabel.TRAILING ), "0,2" );
+            WebPasswordField wtfPassword = new WebPasswordField ( 15 );
+            content.add ( wtfPassword, "1,2" );
 
             WebButton register = new WebButton ( "Register" );
             WebButton cancel = new WebButton ( "Cancel" );
-            ActionListener listener = new ActionListener ()
-            {
-                @Override
-                public void actionPerformed ( ActionEvent e )
-                {
+            ActionListener listener = (ActionEvent e) -> {
+                try {
                     setVisible ( false );
+                    try {
+                        int result = AccountBlo.getInstance().register("", wtfPassword.getText(), wtfEmail.getText());
+                        if(result == -1)
+                        {
+                            NotificationManager.showNotification ( "This email is invalid!");
+                        }
+                        else
+                        {
+                            NotificationManager.showNotification ( "Register success!" );
+                        }
+                    } catch (XPathExpressionException ex) {
+                        Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
+                    }                   
+                } catch (ParserConfigurationException | SAXException | IOException | TransformerException ex) {
+                    Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
                 }
             };
             register.addActionListener ( listener );
@@ -1164,7 +1174,12 @@ public class UWGuiNew extends javax.swing.JFrame {
             SwingUtils.equalizeComponentsWidths ( register, cancel );
 
             add ( content );
-
+            
+            registerHotkeys(register);
+        }
+        
+        private void registerHotkeys(WebButton register)
+        {
             HotkeyManager.registerHotkey ( this, register, Hotkey.ESCAPE );
             HotkeyManager.registerHotkey ( this, register, Hotkey.ENTER );
         }

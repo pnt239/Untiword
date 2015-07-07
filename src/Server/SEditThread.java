@@ -1,6 +1,7 @@
 package Server;
 
 import Controller.AccountController.FacebookController;
+import Model.Account.Account;
 import Model.Account.AccountLoginViewModel;
 import Server.BusinessLogicLayer.AccountBlo;
 import java.io.BufferedReader;
@@ -71,6 +72,7 @@ public class SEditThread extends Thread {
     /**
      * Method to be run when this thread is created
      */
+    @Override
     public void run() {
         try {
             handleConnection(socket);
@@ -108,51 +110,85 @@ public class SEditThread extends Thread {
             
             for (String line = in.readLine(); line != null; line = in.readLine()) 
             {
-                if (line != null) {
-                    if (line.equals("BYE")) {
-                        System.out.println("Disconnecting user");
-                        
-                        server.removeUser(this);
-                        break;
-                    }
-                    else if(line.indexOf("CUSTOM_REQUEST/AUTHORIZE") == 0) 
+                if (line.equals("BYE")) {
+                    System.out.println("Disconnecting user");
+
+                    server.removeUser(this);
+                    break;
+                }
+                else if(line.startsWith("CUSTOM_REQUEST/AUTHORIZE")) 
+                {
+                    AccountLoginViewModel model = new AccountLoginViewModel(line);
+
+                    CustomRequest request = new CustomRequest(4);
+                    request.setAction("AUTHORIZE");                       
+                    request.setValue("applicationId", model.getApplicationUserId());
+                    request.setValue("loginType", model.getLoginType());
+                    request.setValue("accessToken", model.getAccessToken());
+
+                    if(FacebookController.getInstance().getUser(model.getAccessToken()) != null)
                     {
-                        AccountLoginViewModel model = new AccountLoginViewModel(line);
-                        
-                        CustomRequest request = new CustomRequest(4);
-                        request.setAction("AUTHORIZE");                       
-                        request.setValue("applicationId", model.getApplicationUserId());
-                        request.setValue("loginType", model.getLoginType());
-                        request.setValue("accessToken", model.getAccessToken());
-                        
-                        if(FacebookController.getInstance().getUser(model.getAccessToken()) != null)
+                        System.out.println("User id" + userID + " was login");    
+                        try
                         {
-                            System.out.println("User id" + userID + " was login");    
-                            try
+                            AccountBlo.getInstance().loginWithFacebook(model.getAccessToken());
+                            request.setValue("result", "success");      
+                            System.out.println();
+                        }
+                        catch (ParserConfigurationException | SAXException | IOException | TransformerException | XPathExpressionException e)
+                        {
+                            System.out.println(e.toString());
+                        }                                                
+                    }
+                    else
+                    {
+                        request.setValue("result", "failed");
+                    }
+
+                    this.sendMessage(request.toString());
+                }
+                else if(line.startsWith("CUSTOM_REQUEST/LOGOUT"))
+                {
+                    CustomRequest request = new CustomRequest(line);
+                    try {
+                        AccountBlo.getInstance().logout(request.getValue("accessToken"));
+                    } catch (ParserConfigurationException | SAXException | TransformerException | XPathExpressionException ex) {
+                        System.out.println(ex.toString());
+                    }
+                }
+                else if(line.startsWith("CUSTOM_REQUEST/GET"))
+                {
+                    CustomRequest request = new CustomRequest(line);
+                    if(request.getValue("type").equals("loginUsers"))
+                    {
+                        try 
+                        {
+                            Account[] logins = AccountBlo.getInstance().getLoginUsers();
+                            if(logins != null)
                             {
-                                AccountBlo.getInstance().login(model.getAccessToken());
-                                request.setValue("result", "success");      
-                                System.out.println();
+                                String usersString = "";
+                                for(int i=0; i<logins.length-1; i++)
+                                {
+                                    if(logins[i] != null)
+                                    {
+                                        usersString += logins[i].getId()+ "|" + logins[i].getFacebookEmail() + "|";
+                                    }                                   
+                                }
+                                
+                                if(logins[logins.length - 1] != null)
+                                {
+                                     usersString += logins[logins.length - 1].getId() + "|" + logins[logins.length - 1].getFacebookEmail();
+                                }                           
+                                
+                                CustomRequest newRequest = new CustomRequest(2);
+                                newRequest.setAction("RETURN");
+                                newRequest.setValue("type", "loginUsers");
+                                newRequest.setValue("value", usersString);
+                                sendMessage(newRequest.toString());
+                                System.out.println("Return get login users request: " + usersString);
                             }
-                            catch (ParserConfigurationException | SAXException | IOException | TransformerException | XPathExpressionException e)
-                            {
-                                System.out.println(e.toString());
-                            }                                                
-                        }
-                        else
-                        {
-                            request.setValue("result", "failed");
-                        }
-                        
-                        this.sendMessage(request.toString());
-                    }
-                    else if(line.startsWith("CUSTOM_REQUEST/LOGOUT"))
-                    {
-                        CustomRequest request = new CustomRequest(line);
-                        try {
-                            AccountBlo.getInstance().logout(request.getValue("accessToken"));
                         } catch (ParserConfigurationException | SAXException | TransformerException | XPathExpressionException ex) {
-                            System.out.println(ex.toString());
+                            Logger.getLogger(SEditThread.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }

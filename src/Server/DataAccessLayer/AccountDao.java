@@ -5,10 +5,13 @@
  */
 package Server.DataAccessLayer;
 
+import Controller.AccountController.FacebookController;
 import Model.Account.Account;
 import Model.Account.FacebookUser;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -189,8 +192,14 @@ public class AccountDao
         if(xPathString != null
                 && dataSource != null)
         {
-            XPath xPath = XPathFactory.newInstance().newXPath();
-            result = (NodeList)xPath.evaluate(xPathString, dataSource, XPathConstants.NODESET);
+            try
+            {
+                XPath xPath = XPathFactory.newInstance().newXPath();
+                result = (NodeList)xPath.evaluate(xPathString, dataSource, XPathConstants.NODESET);
+            }
+            catch(Exception e)
+            {            
+            }           
         }    
         
         return result;
@@ -201,7 +210,8 @@ public class AccountDao
         int result = -1;
         
         if(account != null
-                && !exists(account.getFBUser().getUid(), "facebookUserId"))
+                && !exists(account.getFBUserId(), "facebookUserId")
+                && !exists(account.getEmail(), "email"))
         {
             int lastId = Integer.parseInt(_root.getAttribute("LastAccountId"));
             lastId++;
@@ -224,7 +234,7 @@ public class AccountDao
     {
         boolean result = false;
         
-        NodeList exists = getNodes("/AccountDatabase/Account[@Id=" + id + "]", _root);
+        NodeList exists = getNodes("/AccountDatabase/Account[@Id='" + id + "']", _root);
         if(exists.getLength() > 0)
         {
             for (int i=0; i<exists.getLength(); i++) {
@@ -243,7 +253,7 @@ public class AccountDao
         
         if(newData != null)
         {
-            NodeList exists = getNodes("/AccountDatabase/Account[@Id=" + id + "]", _root);
+            NodeList exists = getNodes("/AccountDatabase/Account[@Id='" + id + "']", _root);
             if(exists.getLength() == 1)
             {
                 setAttributeValue((Element) exists.item(0), "Password", newData.getPassword());
@@ -259,6 +269,27 @@ public class AccountDao
         return result;
     }
     
+    public boolean updateAccesstoken(int id, String accessToken) throws XPathExpressionException, TransformerException
+    {
+        boolean result = false;
+        
+        if(id < 0 || accessToken == null || accessToken.equals(""))
+        {
+            return result;
+        }
+        
+        NodeList exists = getNodes("/AccountDatabase/Account[@Id='" + id + "']", _root);
+        if(exists.getLength() == 1)
+        {
+            setAttributeValue((Element) exists.item(0), "FacebookAccessToken", accessToken);
+            saveDatabase(_doc, _dataPath);
+
+            result = true;
+        }
+            
+        return result;
+    }
+    
     public Account fromElement(Element input)
     {
         Account result = null;
@@ -268,11 +299,21 @@ public class AccountDao
             result = new Account();
             
             result.setId(Integer.parseInt(input.getAttribute("Id")));
-            result.setDateRegister(new Date(input.getAttribute("DateRegister")));
+            
+            SimpleDateFormat formatter = new SimpleDateFormat("EEEE MMM dd HH:mm:ss a yyyy");
+            try {
+ 
+		Date date = formatter.parse(input.getAttribute("DateRegister"));
+                result.setDateRegister(date);
+ 
+            } catch (ParseException e) {
+            }
+            
             result.setUsername(input.getAttribute("Username"));
             result.setPassword(input.getAttribute("Password"));
             result.setEmail(input.getAttribute("Email"));
-            result.setFBUser(new FacebookUser(null, input.getAttribute("FacebookAccessToken")));
+            FacebookUser fbUser = FacebookController.getInstance().getUser(input.getAttribute("FacebookAccessToken"));
+            result.setFBUser(fbUser);
         }
         
         return result;
@@ -282,12 +323,18 @@ public class AccountDao
     {
         Account result = null;
         
-        NodeList exists = getNodes("/AccountDatabase/Account[@" + attrName + "=" + attrValue + "]", _root);
+        if(attrName == null || attrName.equals("")
+                || attrValue == null || attrValue.equals(""))
+        {
+            return result;
+        }
+        
+        NodeList exists = getNodes("/AccountDatabase/Account[@" + attrName + "='" + attrValue + "']", _root);
         if(exists.getLength() == 1)
         {
             result = fromElement((Element) exists.item(0));
-        }
-        
+        }  
+
         return result;
     }
     
@@ -331,14 +378,18 @@ public class AccountDao
         boolean result = false;
         
         NodeList exists = null;
+        if(type == null || type.equals("")
+            || id == null || id.equals(""))
+        {
+            return result;
+        }
         
-        if(null != type)
         switch (type) {
-            case "username":
-                exists = getNodes("/AccountDatabase/Account[@Username=" + id + "]", _root);
+            case "email":
+                exists = getNodes("/AccountDatabase/Account[@Email='" + id + "']", _root);                    
                 break;
             case "facebookUserId":
-                exists = getNodes("/AccountDatabase/Account[@FacebookUserId=" + id + "]", _root);
+                exists = getNodes("/AccountDatabase/Account[@FacebookUserId='" + id + "']", _root);          
                 break;
         }
         
@@ -353,30 +404,32 @@ public class AccountDao
         return result;
     }
     
-    public String login(String username, String password) throws XPathExpressionException, TransformerException
+    public String login(String email, String password) throws XPathExpressionException, TransformerException
     {
         String result = "";
         
-        Account user = getUser("Username", username);
-        if(user != null)
+        Account user = getUser("email", email);
+        if(user != null
+                && password != null && !password.equals("")
+                && user.getPassword().equals(password))
         {
-            NodeList exists = getNodes("/AccountLoginDatabase/Account[@Username=" + username + "]", _loginRoot);
+            NodeList exists = getNodes("/AccountLoginDatabase/Account[@Email='" + email + "']", _loginRoot);
             Date now = new Date();
             
-            result = username + now.toString() + password;
+            result = email + now.toString() + password;
              
             if(exists.getLength() == 1)
             {
                 setAttributeValue((Element) exists.item(0), "DateLogin", now.toString());
-                setAttributeValue((Element) exists.item(0), "LoginToken", result);
+                setAttributeValue((Element) exists.item(0), "LoginToken", result);              
             }
             else
             {
                 Element login = _loginDoc.createElement("Account");
                 _loginRoot.appendChild(login);
                 
-                createAttribute(login, "Id", String.valueOf(user.getId()));
-                createAttribute(login, "Username", user.getUsername());
+                createAttribute(login, "AccountId", String.valueOf(user.getId()));
+                createAttribute(login, "Email", user.getEmail());
                 createAttribute(login, "FacebookUserId", user.getFBUserId());
                 createAttribute(login, "FacebookAccessToken", user.getFacebookAccessToken());
                 createAttribute(login, "DateLogin", now.toString());
@@ -393,10 +446,16 @@ public class AccountDao
     {
         String result = "";
         
+        if(fBUserId == null || fBUserId.equals("")
+                || accessToken == null || accessToken.equals(""))
+        {
+            return result;
+        }
+        
         Account user = getUser("FacebookUserId", fBUserId);
         if(user != null)
         {
-             NodeList exists = getNodes("/AccountLoginDatabase/Account[@FacebookUserId=" + fBUserId + "]", _loginRoot);
+             NodeList exists = getNodes("/AccountLoginDatabase/Account[@FacebookUserId='" + fBUserId + "']", _loginRoot);
              Date now = new Date();
              
              result = fBUserId + now.toString() + accessToken;
@@ -405,13 +464,14 @@ public class AccountDao
             {
                 setAttributeValue((Element) exists.item(0), "DateLogin", now.toString());
                 setAttributeValue((Element) exists.item(0), "LoginToken", result);
+                updateAccesstoken(user.getId(), accessToken);
             }
             else
             {
                 Element login = _loginDoc.createElement("Account");
                 _loginRoot.appendChild(login);
                 
-                createAttribute(login, "Id", String.valueOf(user.getId()));
+                createAttribute(login, "AccountId", String.valueOf(user.getId()));
                 createAttribute(login, "Username", user.getUsername());
                 createAttribute(login, "FacebookUserId", user.getFBUserId());
                 createAttribute(login, "FacebookAccessToken", user.getFacebookAccessToken());
@@ -425,29 +485,72 @@ public class AccountDao
         return result;
     }
     
-    public void logout(String id, String type) throws XPathExpressionException
+    public void logout(String id, String type) throws XPathExpressionException, TransformerException
     {
         NodeList exists = null;
         
-        switch (type) {
-            case "username":
-                exists = getNodes("/AccountLoginDatabase/Account[@Username=" + id + "]", _loginRoot);
+        if(id == null || id.equals("")
+                || type == null || type.equals(""))
+        {
+            return;
+        }
+        
+        Account user = null;
+        switch (type) 
+        {
+            case "email":
+                user = getUser("Email", id);
                 break;
             case "facebookUserId":
-                exists = getNodes("/AccountLoginDatabase/Account[@FacebookUserId=" + id + "]", _loginRoot);
+                user = getUser("FacebookUserId", id);
                 break;
         }
         
-        if(exists != null)
+        if(user != null)
         {
-            if(exists.getLength() > 0)
+            exists = getNodes("/AccountLoginDatabase/Account[@AccountId='" + user.getId() + "']", _loginRoot);
+            if(exists != null)
             {
-                for(int i=0; i<exists.getLength(); i++)
+                if(exists.getLength() > 0)
                 {
-                    _loginRoot.removeChild(exists.item(i));
-                }
-            }
-        }      
+                    for(int j=0; j<exists.getLength(); j++)
+                    {
+                        _loginRoot.removeChild(exists.item(j));
+                    }                
+                    saveDatabase(_loginDoc, _loginDataPath);
+                }             
+            }            
+        }
+        
+        
+//        switch (type) {
+//            case "email":
+//                exists = getNodes("/AccountDatabase/Account[@Email='" + id + "']", _root);
+//                break;
+//            case "facebookUserId":
+//                exists = getNodes("/AccountDatabase/Account[@FacebookUserId='" + id + "']", _root);
+//                break;
+//        }
+//        
+//        if(exists != null)
+//        {
+//            if(exists.getLength() > 0)
+//            {
+//                for(int i=0; i<exists.getLength(); i++)
+//                {
+//                    Element user = (Element) exists.item(i);
+//                    NodeList exists2 = getNodes("/AccountLoginDatabase/Account[@AccountId='" + user.getAttribute("Id") + "']", _loginRoot);
+//                    if(exists2 != null)
+//                    {
+//                        for(int j=0; j<exists2.getLength(); j++)
+//                        {
+//                            _loginRoot.removeChild(exists2.item(j));
+//                        }                   
+//                    }                  
+//                }
+//                saveDatabase(_loginDoc, _loginDataPath);
+//            }
+//        }      
     }
     
     public int createDocument(String id, String name, String fBUserId) throws TransformerException
@@ -477,7 +580,7 @@ public class AccountDao
     {
         boolean result = false;
         
-        NodeList exists = getNodes("/AccountDatabase/Document[@Id=" + id + "]", _root);
+        NodeList exists = getNodes("/AccountDatabase/Document[@Id='" + id + "']", _root);
         if(exists.getLength() > 0)
         {
             for (int i=0; i<exists.getLength(); i++) {
