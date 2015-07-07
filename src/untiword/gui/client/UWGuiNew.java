@@ -48,6 +48,7 @@ import com.alee.managers.notification.NotificationManager;
 import com.alee.utils.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
@@ -102,6 +103,7 @@ public class UWGuiNew extends javax.swing.JFrame {
     private ImageIcon _i1;
     private WebLabel _userNameLabel;
     private WebLabel _emailLabel;
+    private WebButton connectBtn;
     private HashMap<String, String> _loginUsers;
     private WebButton _loginBtn;
 
@@ -214,7 +216,8 @@ public class UWGuiNew extends javax.swing.JFrame {
     private String Server;
     private String Po;
     private ClientController clientController;
-    private boolean isConnect = false;
+    private boolean isLoggedIn = false;
+    private boolean isConnected = false;
     private ActionListener breadcrumbAction;
     
     private int documentCount = 1;
@@ -275,7 +278,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         bottomPane.setMargin(new Insets(3, 3, 3, 3));
 
         ActionListener getDocActionListener = (ActionEvent e) -> {
-            if (isConnect) {
+            if (isLoggedIn) {
                 clientController.sendMessage(clientController.createControlMessage("getdoclist", 0, ""));
                 System.out.println(e.getActionCommand());
             }
@@ -327,14 +330,31 @@ public class UWGuiNew extends javax.swing.JFrame {
         serverAddr.setInputPrompt("Server Address:");
         serverAddr.setHideInputPromptOnFocus(false);
         serverAddr.setInputPromptFont(serverAddr.getFont().deriveFont(Font.ITALIC));
-        serverAddr.setBounds(50, 45, 300, 25);
+        serverAddr.setBounds(50, 45, 210, 25);
+        
+        connectBtn = new WebButton("Connect");
+        connectBtn.setBounds(270, 45, 80, 25);
+        connectBtn.addActionListener(new ActionListener() {
 
-        serverPort.setInputPrompt("Port:");
-        serverPort.setHideInputPromptOnFocus(false);
-        serverPort.setBounds(50, 80, 300, 25);
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!isConnected) {
+                    connectToServer();
+                } else {
+                    disconnectToServer();
+                }
+            }
+        });
+        
+        //serverPort.setInputPrompt("Port:");
+        //serverPort.setHideInputPromptOnFocus(false);
+        //serverPort.setBounds(50, 80, 300, 25);
+        WebLabel label1 = new WebLabel("Login/Register");
+        label1.setBounds(50, 80, 300, 25);
 
         _loginFBbtn = new WebButton("Login with Facebook");
         _loginFBbtn.setBounds(50, 115, 180, 30);
+        _loginFBbtn.setEnabled(false);
         _loginFBbtn.addActionListener((ActionEvent e) -> {
             try {
                 _fBLoginJFrame = new FBLoginJFrame();
@@ -347,8 +367,8 @@ public class UWGuiNew extends javax.swing.JFrame {
         });
         
         _registerBtn = new WebButton("Register");
-        
         _registerBtn.setBounds(230, 115, 100, 30);
+        _registerBtn.setEnabled(false);
         _registerBtn.addActionListener((ActionEvent e) -> {
             boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
             WebLookAndFeel.setDecorateDialogs ( true );
@@ -363,6 +383,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         
         _loginBtn = new WebButton("Login");
         _loginBtn.setBounds(50, 115, 100, 30);
+        _loginBtn.setEnabled(false);
         _loginBtn.addActionListener((ActionEvent e) -> {
             boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
             WebLookAndFeel.setDecorateDialogs ( true );
@@ -377,7 +398,8 @@ public class UWGuiNew extends javax.swing.JFrame {
 
         loginFormPan.add(label);
         loginFormPan.add(serverAddr);
-        loginFormPan.add(serverPort);
+        loginFormPan.add(connectBtn);
+        loginFormPan.add(label1);
         try {
             if(!isConnectInternet()){
                 loginFormPan.add(_registerBtn);
@@ -467,8 +489,9 @@ public class UWGuiNew extends javax.swing.JFrame {
                     cl.show(centerPane, "OpenCard");
                     openBreadcrumb.setSelected(true);
                     _loginFBbtn.setText("Log in as " + _fBUser.getName());                  
-                    isConnect = true;
+                    isLoggedIn = true;
                     
+                    clientController.getDocList();
                     clientController.requestLoginUsers();
                 }
                 catch(Exception e)
@@ -486,10 +509,8 @@ public class UWGuiNew extends javax.swing.JFrame {
         clientController.setConnectionResultListener(() -> {
             try
             {
-//                _fBLoginJFrame.close();
-//                _fBLoginJFrame = new FBLoginJFrame();
-//                _fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-//                _fBLoginJFrame.setVisible(false);
+                isConnected = false;
+                switchConnectStage(isConnected);
             }
             catch(Exception e)
             {
@@ -1108,6 +1129,37 @@ public class UWGuiNew extends javax.swing.JFrame {
         }
         clientController.sendMessage(clientController.createControlMessage("requestNew", -1, newName));
     }
+    
+    private void connectToServer() {
+        Server = serverAddr.getText();
+        Po = "3219";
+        
+        try {
+            clientController.connectToServer(Server, Po);
+        } catch (IOException ex) {
+            Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        isConnected = true;
+        switchConnectStage(isConnected);
+    }
+    
+    private void disconnectToServer() {
+        /* DO NOTHING */
+    }
+    
+    private void switchConnectStage(boolean connected) {
+        serverAddr.setEnabled(!connected);
+        _loginBtn.setEnabled(connected);
+        _loginFBbtn.setEnabled(connected);
+        _registerBtn.setEnabled(connected);
+        
+        if (connected) {
+            connectBtn.setText("Disconnect");
+        } else {
+            connectBtn.setText("Connect");
+        }
+    }
 
     private void setFBLoginJFrameEventListener(FBLoginJFrame fBLoginJFrame, WebButton loginFBbtn) {
         if (fBLoginJFrame != null) {
@@ -1120,23 +1172,10 @@ public class UWGuiNew extends javax.swing.JFrame {
                                 _fBUser = fBLoginJFrame.getUser();
                                 if (_fBUser != null) 
                                 {
-                                    //fBLoginJFrame.close();
-                                    try {
-                                        Server = serverAddr.getText();
-                                        Po = serverPort.getText();
-                                        //Server = "127.0.0.1";
-                                        //Po = "8000";
-                                        clientController.connectToServer(Server, Po);
-                                        clientController.authorize(_fBUser.getAccessToken()); 
-                                        
-//                                        CardLayout cl = (CardLayout) (centerPane.getLayout());
-//                                        cl.show(centerPane, "OpenCard");
-//                                        openBreadcrumb.setSelected(true);
-                                    } catch (IOException ex) {
-                                        Logger.getLogger(UWGuiNew.class.getName()).log(Level.SEVERE, null, ex);
-                                    }
                                     //loginFBbtn.setText("Log in as " + _fBUser.getName());
                                     //isConnect = true;                                                                   
+                                    
+                                    clientController.authorize(_fBUser.getAccessToken());
                                 }
                             }
                         }
