@@ -119,8 +119,6 @@ public class ClientController {
 
             MHT = new MessageHandlingThread(this, in);
             MHT.start();
-
-            this.sendMessage(this.createControlMessage("getdoclist", -1, ""));
         } catch (NumberFormatException e) {
             WebOptionPane.showMessageDialog(null, "Connection failed. Please double check your server address and port number.");
             if(_connectionResultListener != null)
@@ -140,6 +138,10 @@ public class ClientController {
                 _connectionResultListener.connectFailed();
             }
         }
+    }
+    
+    public void getDocList() {
+        this.sendMessage(this.createControlMessage("getdoclist", -1, ""));
     }
 
     /**
