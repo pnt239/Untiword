@@ -9,6 +9,8 @@ import com.sun.javafx.application.PlatformImpl;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.net.CookieHandler;
+import java.net.CookieManager;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -68,6 +70,8 @@ public class SwingFXWebView extends javax.swing.JPanel
         _swingButton.setText("Reload");  
          
         add(_swingButton, BorderLayout.SOUTH);
+        
+        CookieHandler.setDefault(new CookieManager());
     }
 
     /**
