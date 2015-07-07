@@ -13,6 +13,17 @@ import java.util.Date;
  */
 public class Account 
 {
+    private String _applicationId;
+    public String getApplicationId()
+    {
+        return _applicationId;
+    }
+    
+    public void setApplicationId(String value)
+    {
+        _applicationId = value;
+    }
+    
     private int _id;
     public int getId()
     {

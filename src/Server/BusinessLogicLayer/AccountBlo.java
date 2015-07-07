@@ -112,14 +112,14 @@ public class AccountBlo
         return result;
     }
     
-    public String login(String email, String password)
+    public String login(String applicationId, String email, String password)
     {
         String result = "";
         
         return result;
     }
     
-    public String loginWithFacebook(String userToken) 
+    public String loginWithFacebook(String applicationId, String userToken) 
             throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException
     {
         String result = "";
@@ -135,7 +135,7 @@ public class AccountBlo
                 newAccount.setFBUser(user);
                 AccountDao.getInstance().insertAccount(newAccount);
             }
-            result = AccountDao.getInstance().loginWithFacebook(user.getUid(), userToken);
+            result = AccountDao.getInstance().loginWithFacebook(applicationId, user.getUid(), userToken);
         }
         
         return result;

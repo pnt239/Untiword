@@ -367,6 +367,7 @@ public class AccountDao
             {
                 Element id = (Element) exists.item(i);
                 result[i] = getUser("Id", id.getAttribute("AccountId"));
+                result[i].setApplicationId(id.getAttribute("ApplicationId"));
             }
         }
         
@@ -404,7 +405,7 @@ public class AccountDao
         return result;
     }
     
-    public String login(String email, String password) throws XPathExpressionException, TransformerException
+    public String login(String applicationId, String email, String password) throws XPathExpressionException, TransformerException
     {
         String result = "";
         
@@ -420,6 +421,7 @@ public class AccountDao
              
             if(exists.getLength() == 1)
             {
+                setAttributeValue((Element) exists.item(0), "ApplicationId", applicationId);
                 setAttributeValue((Element) exists.item(0), "DateLogin", now.toString());
                 setAttributeValue((Element) exists.item(0), "LoginToken", result);              
             }
@@ -429,6 +431,7 @@ public class AccountDao
                 _loginRoot.appendChild(login);
                 
                 createAttribute(login, "AccountId", String.valueOf(user.getId()));
+                createAttribute(login, "ApplicationId", applicationId);
                 createAttribute(login, "Email", user.getEmail());
                 createAttribute(login, "FacebookUserId", user.getFBUserId());
                 createAttribute(login, "FacebookAccessToken", user.getFacebookAccessToken());
@@ -442,7 +445,7 @@ public class AccountDao
         return result;
     }
     
-    public String loginWithFacebook(String fBUserId, String accessToken) throws XPathExpressionException, TransformerException
+    public String loginWithFacebook(String applicationId, String fBUserId, String accessToken) throws XPathExpressionException, TransformerException
     {
         String result = "";
         
@@ -462,6 +465,7 @@ public class AccountDao
              
             if(exists.getLength() == 1)
             {
+                setAttributeValue((Element) exists.item(0), "ApplicationId", applicationId);
                 setAttributeValue((Element) exists.item(0), "DateLogin", now.toString());
                 setAttributeValue((Element) exists.item(0), "LoginToken", result);
                 updateAccesstoken(user.getId(), accessToken);
@@ -472,6 +476,7 @@ public class AccountDao
                 _loginRoot.appendChild(login);
                 
                 createAttribute(login, "AccountId", String.valueOf(user.getId()));
+                createAttribute(login, "ApplicationId", applicationId);
                 createAttribute(login, "Username", user.getUsername());
                 createAttribute(login, "FacebookUserId", user.getFBUserId());
                 createAttribute(login, "FacebookAccessToken", user.getFacebookAccessToken());
@@ -487,7 +492,7 @@ public class AccountDao
     
     public void logout(String id, String type) throws XPathExpressionException, TransformerException
     {
-        NodeList exists = null;
+        NodeList exists;
         
         if(id == null || id.equals("")
                 || type == null || type.equals(""))
