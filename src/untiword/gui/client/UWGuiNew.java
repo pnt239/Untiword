@@ -61,12 +61,8 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-<<<<<<< .merge_file_a02296
 import java.util.HashMap;
-=======
 import java.net.URL;
-import java.util.ArrayList;
->>>>>>> .merge_file_a19344
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -100,7 +96,6 @@ import untiword.model.DocumentIDsAndNames;
 public class UWGuiNew extends javax.swing.JFrame {
 
     private FacebookUser _fBUser;
-<<<<<<< .merge_file_a02296
     private WebButton _loginFBbtn;
     private WebButton _registerBtn;
     private FBLoginJFrame _fBLoginJFrame;
@@ -108,12 +103,8 @@ public class UWGuiNew extends javax.swing.JFrame {
     private WebLabel _userNameLabel;
     private WebLabel _emailLabel;
     private HashMap<String, String> _loginUsers;
-=======
-    WebButton _loginFBbtn;
-    WebButton _registerBtn;
-    WebButton _loginBtn;
-    FBLoginJFrame _fBLoginJFrame;
->>>>>>> .merge_file_a19344
+    private WebButton _loginBtn;
+
 
     private WebPanel bottomPane;
     private WebBreadcrumb breadcrumb;
@@ -239,7 +230,6 @@ public class UWGuiNew extends javax.swing.JFrame {
             }
         });
     }
-<<<<<<< .merge_file_a02296
     
     private void formWindowClosing(java.awt.event.WindowEvent evt) {                                   
         // TODO add your handling code here:
@@ -248,7 +238,7 @@ public class UWGuiNew extends javax.swing.JFrame {
              clientController.logout(_fBUser.getAccessToken());
         }    
     }            
-=======
+    
     public boolean isConnectInternet() throws IOException{
         HttpURLConnection connection = (HttpURLConnection) new URL("https://www.google.com/?gws_rd=ssl").openConnection();
         connection.setRequestMethod("HEAD");
@@ -258,7 +248,6 @@ public class UWGuiNew extends javax.swing.JFrame {
         }
         return true;
     }
->>>>>>> .merge_file_a19344
 
     private void initComponents(){
         // Init variable
@@ -362,7 +351,6 @@ public class UWGuiNew extends javax.swing.JFrame {
         });
         
         _registerBtn = new WebButton("Register");
-<<<<<<< .merge_file_a02296
         _registerBtn.setBounds(230, 115, 100, 30);
         _registerBtn.addActionListener((ActionEvent e) -> {
             boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
@@ -374,23 +362,6 @@ public class UWGuiNew extends javax.swing.JFrame {
             registerDialog.setVisible(true);
             
             WebLookAndFeel.setDecorateDialogs ( decorateFrames );
-=======
-        _registerBtn.setBounds(160, 115, 100, 30);
-        _registerBtn.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                boolean decorateFrames = WebLookAndFeel.isDecorateDialogs ();
-                WebLookAndFeel.setDecorateDialogs ( true );
-                
-                RegisterDialog registerDialog = new RegisterDialog();
-                registerDialog.pack();
-                registerDialog.setLocationRelativeTo(null);
-                registerDialog.setVisible(true);
-                
-                WebLookAndFeel.setDecorateDialogs ( decorateFrames );
-            }
->>>>>>> .merge_file_a19344
         });
         
         _loginBtn = new WebButton("Login");
@@ -1207,11 +1178,8 @@ public class UWGuiNew extends javax.swing.JFrame {
             layout.setVGap ( 5 );
             WebPanel content = new WebPanel ( layout );
             content.setMargin ( 15, 30, 15, 30 );
-<<<<<<< .merge_file_a02296
+            
             content.setOpaque ( false );          
-=======
-            content.setOpaque ( false );
->>>>>>> .merge_file_a19344
             
             content.add (new WebLabel ( "Email", WebLabel.TRAILING ), "0,1" );
             WebTextField wtfEmail = new WebTextField ( 15 );
@@ -1287,13 +1255,8 @@ public class UWGuiNew extends javax.swing.JFrame {
 
             WebButton login = new WebButton ( "Login" );
             WebButton cancel = new WebButton ( "Cancel" );
-            ActionListener listener = new ActionListener ()
-            {
-                @Override
-                public void actionPerformed ( ActionEvent e )
-                {
-                    setVisible ( false );
-                }
+            ActionListener listener = (ActionEvent e) -> {
+                setVisible ( false );
             };
             login.addActionListener ( listener );
             cancel.addActionListener ( listener );
