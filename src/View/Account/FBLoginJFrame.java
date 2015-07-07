@@ -8,20 +8,22 @@ package View.Account;
 import Controller.AccountController.FacebookController;
 import Model.Account.FacebookUser;
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.net.MalformedURLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
 
 /**
  *
  * @author Lilium Aikia
  */
-public class FBLoginJFrame extends javax.swing.JFrame {
-
-    private FBLoginJFrameEventListener _fbBLoginJFrameEventListener;
+public class FBLoginJFrame extends JFrame 
+{
+//    private SwingFXWebView _webBrowser;
+    private SimpleSwingBrowser _webBrowser;
+    
     private boolean _loginSuccess;
-    private SwingFXWebView _webBrowser;
+    private FBLoginJFrameEventListener _fbBLoginJFrameEventListener;   
     
     public void close()
     {
@@ -42,7 +44,7 @@ public class FBLoginJFrame extends javax.swing.JFrame {
         {
             if(_webBrowser != null)
             {
-                String url = _webBrowser.getUrl();
+                String url = _webBrowser.getURL();
                 String at = FacebookController.getInstance().parseUserAccessTokenUrl(url);
                 user = FacebookController.getInstance().getUser(at);
             }       
@@ -74,8 +76,8 @@ public class FBLoginJFrame extends javax.swing.JFrame {
     {
         if(_webBrowser != null)
         {
-            _webBrowser.setSwingFXWebViewEventListener(() -> {
-                if(_webBrowser.getUrl().contains("access_token"))
+            _webBrowser.setSimpleSwingBrowserEventListener(() -> {
+                if(_webBrowser.getURL().contains("access_token"))
                 {
                     setVisible(false);
                     _loginSuccess = true;
@@ -84,12 +86,12 @@ public class FBLoginJFrame extends javax.swing.JFrame {
                         _fbBLoginJFrameEventListener.loginSuccess();
                     }            
                 }
-                else if(_webBrowser.getUrl().startsWith("www.localhost")
-                        || _webBrowser.getUrl().startsWith("localhost")
-                        || _webBrowser.getUrl().startsWith("https://www.localhost")
-                        || _webBrowser.getUrl().startsWith("https://localhost")
-                        || _webBrowser.getUrl().startsWith("http://www.localhost")
-                        || _webBrowser.getUrl().startsWith("http://localhost"))
+                else if(_webBrowser.getURL().startsWith("www.localhost")
+                        || _webBrowser.getURL().startsWith("localhost")
+                        || _webBrowser.getURL().startsWith("https://www.localhost")
+                        || _webBrowser.getURL().startsWith("https://localhost")
+                        || _webBrowser.getURL().startsWith("http://www.localhost")
+                        || _webBrowser.getURL().startsWith("http://localhost"))
                 {
                     setVisible(false);
                     _loginSuccess = false;
@@ -108,13 +110,17 @@ public class FBLoginJFrame extends javax.swing.JFrame {
      */
     public FBLoginJFrame() throws MalformedURLException {
         initComponents();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        pack();
         setLayout(new BorderLayout());
-        _webBrowser = new SwingFXWebView(FacebookController.getInstance().getFbUserAccessTokenUrl());
+        
+        _webBrowser = new SimpleSwingBrowser();
         if(_webBrowser != null)
         {
             setWebBrowserListener();
             add(_webBrowser, BorderLayout.CENTER);
-            _webBrowser.setPreferredSize(new Dimension(_webBrowser.getHeight(), _webBrowser.getWidth()));
+            //_webBrowser.setPreferredSize(new Dimension(_webBrowser.getHeight(), _webBrowser.getWidth()));
+            _webBrowser.loadURL(FacebookController.getInstance().getFbUserAccessTokenUrl());
         }          
     }
 
