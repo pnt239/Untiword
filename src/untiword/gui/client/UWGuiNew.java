@@ -29,6 +29,7 @@ import com.alee.laf.WebLookAndFeel;
 import com.alee.laf.button.WebButton;
 import com.alee.laf.button.WebToggleButton;
 import com.alee.laf.combobox.WebComboBox;
+import com.alee.laf.filechooser.WebFileChooser;
 import com.alee.laf.label.WebLabel;
 import com.alee.laf.list.WebListModel;
 import com.alee.laf.menu.WebCheckBoxMenuItem;
@@ -50,7 +51,6 @@ import com.alee.managers.notification.NotificationManager;
 import com.alee.utils.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
@@ -62,6 +62,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -80,6 +81,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpressionException;
@@ -89,6 +91,7 @@ import untiword.utils.Resources;
 import untiword.components.UWEditor;
 import untiword.components.UWListView;
 import untiword.components.docx.DocxDocument;
+import untiword.components.docx.DocxWriter;
 import untiword.controller.ClientController;
 import untiword.events.AuthorizationListener;
 import untiword.events.ListDocumentEvent;
@@ -342,15 +345,11 @@ public class UWGuiNew extends javax.swing.JFrame {
 
         connectBtn = new WebButton("Connect");
         connectBtn.setBounds(270, 45, 80, 25);
-        connectBtn.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!isConnected) {
-                    connectToServer();
-                } else {
-                    disconnectToServer();
-                }
+        connectBtn.addActionListener((ActionEvent e) -> {
+            if (!isConnected) {
+                connectToServer();
+            } else {
+                disconnectToServer();
             }
         });
 
@@ -367,6 +366,7 @@ public class UWGuiNew extends javax.swing.JFrame {
             try {
                 _fBLoginJFrame = new FBLoginJFrame();
                 _fBLoginJFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                _fBLoginJFrame.setLocationRelativeTo(null);
                 _fBLoginJFrame.setVisible(true);
                 setFBLoginJFrameEventListener(_fBLoginJFrame, _loginFBbtn);
             } catch (MalformedURLException ex) {
@@ -542,8 +542,16 @@ public class UWGuiNew extends javax.swing.JFrame {
             }
 
             @Override
-            public void documentsReturned(String data) {
-
+            public void documentsReturned(String data) 
+            {
+                String[] parts = data.split("[|]");
+                _loginUsers = new HashMap<>(parts.length / 2);
+                for(int i=0; i<parts.length-1; i++)
+                {
+                    _loginUsers.put(parts[i], parts[i+1]);
+                    i++;
+                }
+                System.out.println("Reveiced shared documents request: " + data);
             }
         });
 
@@ -609,11 +617,21 @@ public class UWGuiNew extends javax.swing.JFrame {
         final CheckBoxListModel model = new CheckBoxListModel();
 
         //Set Element
-        if (_loginUsers != null) {
-            String[] keys = _loginUsers.keySet().toArray(new String[_loginUsers.keySet().size()]);
-            for (String key : keys) {
-                model.addCheckBoxElement(_loginUsers.get(key), false);
+        if(_loginUsers != null
+                && clientController != null)
+        {
+            if(clientController.getUser() != null)
+            {
+                String[] keys = _loginUsers.keySet().toArray(new String[_loginUsers.keySet().size()]);
+                for (String key : keys) 
+                {
+                    if(key == null ? clientController.getUser().getUserID() != null : !key.equals(clientController.getUser().getUserID()))
+                    {
+                        model.addCheckBoxElement(_loginUsers.get(key), false);
+                    }               
+                }
             }
+           
         }
 
         WebCheckBoxList leftWebCheckBoxList = new WebCheckBoxList(model);
@@ -630,7 +648,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         //Right panel
         final CheckBoxListModel modelRight = new CheckBoxListModel();
 
-        //modelRight.addCheckBoxElement ( "Element which" );        
+        //modelRight.addCheckBoxElement ( "Element which" );         
         WebCheckBoxList rightWebCheckBoxList = new WebCheckBoxList(modelRight);
         rightWebCheckBoxList.setVisibleRowCount(4);
         rightWebCheckBoxList.setSelectedIndex(0);
@@ -790,10 +808,26 @@ public class UWGuiNew extends javax.swing.JFrame {
         fileMenu.addSeparator();
         shareMenuItem.addActionListener(shareActionListener);
 
-        newMenuItem = new WebMenuItem("New", resources.loadIcon("resources/new.png"));
+        newMenuItem = new WebMenuItem("New", resources.loadIcon("resources/new.png"));    
+        newMenuItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createDocument();
+            }
+        });
         fileMenu.add(newMenuItem);
 
         openMenuItem = new WebMenuItem("Open", resources.loadIcon("resources/open.png"));
+        openMenuItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                CardLayout cl = (CardLayout) (centerPane.getLayout());
+                cl.show(centerPane, "OpenCard");
+                openBreadcrumb.setSelected(true);
+            }
+        });
         fileMenu.add(openMenuItem);
 
         renameMenuItem = new WebMenuItem("Rename");
@@ -835,6 +869,37 @@ public class UWGuiNew extends javax.swing.JFrame {
         fileMenu.addSeparator();
 
         downloadMenuItem = new WebMenuItem("Download as");
+        downloadMenuItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                WebFileChooser fileChooser = null;
+                File file = null;
+                if ( fileChooser == null )
+                {
+                    fileChooser = new WebFileChooser ();
+                    fileChooser.setAcceptAllFileFilterUsed(false);
+                    fileChooser.setFileFilter(new FileNameExtensionFilter("Microsoft Word (*.docx)", "docx"));
+                    fileChooser.setMultiSelectionEnabled ( false );
+                }
+                if ( file != null )
+                {
+                    fileChooser.setSelectedFile ( file );
+                }
+                if ( fileChooser.showSaveDialog(editPane ) == WebFileChooser.APPROVE_OPTION )
+                {
+                    file = fileChooser.getSelectedFile ();                    
+                    DocxDocument document = (DocxDocument) ((UWEditor) docmentPane
+                            .getActivePane().getSelected().getComponent()).getTextPane().getDocument();
+                    DocxWriter docxWriter = new DocxWriter(document);
+                    try {
+                        docxWriter.write(file.getPath());
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
         fileMenu.add(downloadMenuItem);
         fileMenu.addSeparator();
 
@@ -1197,7 +1262,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         documentCount++;
         if (newName.equals("Enter Document Name") || newName.equals("")) {
             newName = "New Document";
-        }
+        }        
         clientController.sendMessage(clientController.createControlMessage("requestNew", -1, newName));
     }
 
