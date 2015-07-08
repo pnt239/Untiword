@@ -151,4 +151,56 @@ public class AccountBlo
             AccountDao.getInstance().logout(user.getUid(), "facebookUserId");
         }
     }
+    
+    public void createDocument(int documentId, String applicationId) 
+            throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException
+    {
+        if(documentId >= 0)
+        {
+            int userId = AccountDao.getInstance().getAccountIdWithApplicationId(applicationId);
+            if(userId != -1)
+            {
+                AccountDao.getInstance().createDocument(userId, documentId);
+                AccountDao.getInstance().insertSharedDocument(userId, documentId);
+            }
+        }      
+    }
+    
+    public void insertSharedDocument(int documentId, String applicationId) 
+            throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException
+    {
+        if(documentId >= 0)
+        {
+            int userId = AccountDao.getInstance().getAccountIdWithApplicationId(applicationId);
+            if(userId != -1)
+            {
+                AccountDao.getInstance().insertSharedDocument(userId, documentId);
+            }
+        }      
+    }
+    
+    public int[] getSharedDocumentList(String applicationId) 
+            throws ParserConfigurationException, SAXException, IOException, TransformerException, XPathExpressionException
+    {
+        int[] result = null;
+        
+        int userId = AccountDao.getInstance().getAccountIdWithApplicationId(applicationId);
+        if(userId != -1)
+        {           
+            String[] list = AccountDao.getInstance().getSharedDocumentList(userId);
+            if(list != null)
+            {
+                if(list.length > 0)
+                {
+                    result = new int[list.length];
+                    for(int i=0; i<list.length; i++)
+                    {
+                        result[i] = Integer.parseInt(list[i]);
+                    }
+                }
+            }
+        }
+        
+        return result;
+    }
 }

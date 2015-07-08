@@ -82,6 +82,7 @@ public class AccountDao
         
         createAttribute(_root, "LastAccountId", "0");
         createAttribute(_root, "LastDocumentId", "0");
+        createAttribute(_root, "LastSharedDocumentId", "0");
         
         saveDatabase(_doc, _dataPath);
     }
@@ -558,7 +559,28 @@ public class AccountDao
 //        }      
     }
     
-    public int createDocument(String id, String name, String fBUserId) throws TransformerException
+    public int getAccountIdWithApplicationId(String applicationId) throws XPathExpressionException
+    {
+        int result = -1;
+        
+        if(applicationId != null
+                && !applicationId.equals(""))
+        {
+            NodeList exists = getNodes("/AccountLoginDatabase/Account[@ApplicationId='" + applicationId + "']", _loginRoot);
+            if(exists != null)
+            {
+                if(exists.getLength() > 0)
+                {
+                    Element user = (Element) exists.item(0);
+                    result = Integer.parseInt(user.getAttribute("AccountId"));
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    public int createDocument(int userId, int documentId) throws TransformerException
     {
         int result;
         
@@ -572,9 +594,29 @@ public class AccountDao
 
         createAttribute(documentXml, "Id", String.valueOf(result));
         createAttribute(documentXml, "DateCreated", new Date().toString());
-        createAttribute(documentXml, "DocumentId", id);
-        createAttribute(documentXml, "OwnerId", fBUserId);
-        createAttribute(documentXml, "Name", name);
+        createAttribute(documentXml, "DocumentId", String.valueOf(documentId));
+        createAttribute(documentXml, "OwnerId", String.valueOf(userId));
+
+        saveDatabase(_doc, _dataPath);
+        
+        return result;
+    }
+    
+    public int insertSharedDocument(int userId, int documentId) throws TransformerException
+    {
+        int result = -1;
+        
+        int lastId = Integer.parseInt(_root.getAttribute("LastSharedDocumentId"));
+        lastId++;
+        result = lastId;
+        _root.setAttribute("LastSharedDocumentId", String.valueOf(lastId));
+        
+        Element documentXml = _doc.createElement("SharedDocument");
+        _root.appendChild(documentXml);          
+
+        createAttribute(documentXml, "Id", String.valueOf(result));
+        createAttribute(documentXml, "DocumentId", String.valueOf(documentId));
+        createAttribute(documentXml, "SharedUserId", String.valueOf(userId));
 
         saveDatabase(_doc, _dataPath);
         
@@ -594,6 +636,27 @@ public class AccountDao
         }
         
         saveDatabase(_doc, _dataPath);
+        
+        return result;
+    }
+    
+    public String[] getSharedDocumentList(int userId) throws XPathExpressionException
+    {
+        String[] result = null;
+        
+        if(userId > 0)
+        {
+            NodeList exists = getNodes("/AccountDatabase/SharedDocument[@SharedUserId='" + String.valueOf(userId) + "']", _root);
+            if(exists.getLength() > 0)
+            {
+                result = new String[exists.getLength()];
+                for (int i=0; i<exists.getLength(); i++) 
+                {
+                    Element id = (Element) exists.item(i);
+                    result[i] = id.getAttribute("DocumentId");
+                }
+            }
+        }
         
         return result;
     }

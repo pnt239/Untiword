@@ -48,7 +48,6 @@ import com.alee.managers.notification.NotificationManager;
 import com.alee.utils.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
@@ -334,15 +333,11 @@ public class UWGuiNew extends javax.swing.JFrame {
         
         connectBtn = new WebButton("Connect");
         connectBtn.setBounds(270, 45, 80, 25);
-        connectBtn.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!isConnected) {
-                    connectToServer();
-                } else {
-                    disconnectToServer();
-                }
+        connectBtn.addActionListener((ActionEvent e) -> {
+            if (!isConnected) {
+                connectToServer();
+            } else {
+                disconnectToServer();
             }
         });
         
@@ -537,8 +532,16 @@ public class UWGuiNew extends javax.swing.JFrame {
             }
 
             @Override
-            public void documentsReturned(String data) {
-                
+            public void documentsReturned(String data) 
+            {
+                String[] parts = data.split("[|]");
+                _loginUsers = new HashMap<>(parts.length / 2);
+                for(int i=0; i<parts.length-1; i++)
+                {
+                    _loginUsers.put(parts[i], parts[i+1]);
+                    i++;
+                }
+                System.out.println("Reveiced shared documents request: " + data);
             }
         });
         
@@ -605,12 +608,21 @@ public class UWGuiNew extends javax.swing.JFrame {
         final CheckBoxListModel model = new CheckBoxListModel ();    
         
         //Set Element
-        if(_loginUsers != null)
+        if(_loginUsers != null
+                && clientController != null)
         {
-             String[] keys = _loginUsers.keySet().toArray(new String[_loginUsers.keySet().size()]);
-            for (String key : keys) {
-                model.addCheckBoxElement(_loginUsers.get(key), false);
+            if(clientController.getUser() != null)
+            {
+                String[] keys = _loginUsers.keySet().toArray(new String[_loginUsers.keySet().size()]);
+                for (String key : keys) 
+                {
+                    if(key == null ? clientController.getUser().getUserID() != null : !key.equals(clientController.getUser().getUserID()))
+                    {
+                        model.addCheckBoxElement(_loginUsers.get(key), false);
+                    }               
+                }
             }
+           
         }
        
         WebCheckBoxList leftWebCheckBoxList = new WebCheckBoxList ( model );
@@ -640,7 +652,7 @@ public class UWGuiNew extends javax.swing.JFrame {
         panel2.setPaintFocus ( true );       
         panel2.setMargin ( 10 );
         panel2.add ( new WebLabel ( "Shared people", WebLabel.CENTER ), BorderLayout.NORTH );
-        panel2.add ( new GroupPanel ( new WebScrollPane ( rightWebCheckBoxList )), BorderLayout.CENTER );
+        panel2.add ( new GroupPanel ( new WebScrollPane ( rightWebCheckBoxList )), BorderLayout.CENTER );     
         
         //Middle buttons
         WebButton addButton = new WebButton(">");

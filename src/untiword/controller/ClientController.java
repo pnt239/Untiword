@@ -142,6 +142,15 @@ public class ClientController {
     
     public void getDocList() {
         this.sendMessage(this.createControlMessage("getdoclist", -1, ""));
+        
+//        if(getUser() != null)
+//        {
+//            CustomRequest request = new CustomRequest(2);
+//            request.setAction("GET");
+//            request.setValue("applicationId", getUser().getUserID());
+//            request.setValue("type", "sharedDocuments");
+//            this.sendMessage(request.toString());
+//        }      
     }
 
     /**
@@ -234,6 +243,13 @@ public class ClientController {
                 if(_returnDataListener != null)
                 {
                     _returnDataListener.loginUsersReturned(request.getValue("value"));
+                }
+            }
+            else if(request.getValue("type").equals("sharedDocuments"))
+            {
+                if(_returnDataListener != null)
+                {
+                    _returnDataListener.documentsReturned(request.getValue("value"));
                 }
             }
         }
