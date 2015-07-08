@@ -33,6 +33,7 @@ import untiword.events.NotFoundDocumentListener;
 import untiword.events.RenameDocumentEvent;
 import untiword.events.RenameDocumentListener;
 import untiword.events.ReturnDataListener;
+import untiword.events.ReveiceNotifyListener;
 import untiword.model.ServerRequestDQ;
 import untiword.model.UserDQ;
 
@@ -58,6 +59,12 @@ public class ClientController {
     public void setReturnDataListener(ReturnDataListener listener)
     {
         _returnDataListener = listener;
+    }
+    
+    private ReveiceNotifyListener _reveiceNotifyListener;
+    public void setReveiceNotifyListener(ReveiceNotifyListener listener)
+    {
+        _reveiceNotifyListener = listener;
     }
 
     private HashMap<Integer, UWEditor> docIDtoDocPanel;
@@ -228,6 +235,14 @@ public class ClientController {
                 {
                     _returnDataListener.loginUsersReturned(request.getValue("value"));
                 }
+            }
+        }
+        else if(line.startsWith("CUSTOM_REQUEST/NOTIFY"))
+        {
+            if(_reveiceNotifyListener != null)
+            {
+                CustomRequest request = new CustomRequest(line);
+                _reveiceNotifyListener.notifyReveiced(request.getValue("message"));
             }
         }
         else {
@@ -513,6 +528,29 @@ public class ClientController {
             request.setAction("GET");
             request.setValue("applicationId", getUser().getUserID());
             request.setValue("type", "loginUsers");
+            sendMessage(request.toString());
+        }
+    }
+    
+    public void requestShareDocument(int documentId, String[] applicationId)
+    {
+        if(documentId >= 0
+                && applicationId != null
+                && getUser() != null)
+        {
+            CustomRequest request = new CustomRequest(3);
+            request.setAction("INVITE");
+            request.setValue("applicationId", getUser().getUserID());
+            request.setValue("documentId", String.valueOf(documentId));
+            
+            String clientList = "";
+            for(int i=0; i<applicationId.length - 1; i++)
+            {
+                clientList += applicationId[i] + "|";
+            }
+            clientList += applicationId[applicationId.length - 1];
+            
+            request.setValue("clientList", clientList);       
             sendMessage(request.toString());
         }
     }

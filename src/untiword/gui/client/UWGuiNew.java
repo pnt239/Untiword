@@ -22,6 +22,7 @@ import com.alee.extended.panel.GroupPanel;
 import com.alee.extended.panel.GroupingType;
 import com.alee.extended.panel.WebButtonGroup;
 import com.alee.extended.tab.DocumentData;
+import com.alee.extended.tab.PaneData;
 import com.alee.extended.tab.WebDocumentPane;
 import com.alee.extended.window.WebPopOver;
 import com.alee.laf.WebLookAndFeel;
@@ -35,6 +36,7 @@ import com.alee.laf.menu.WebMenu;
 import com.alee.laf.menu.WebMenuBar;
 import com.alee.laf.menu.WebMenuItem;
 import com.alee.laf.menu.WebPopupMenu;
+import com.alee.laf.optionpane.WebOptionPane;
 import com.alee.laf.panel.WebPanel;
 import com.alee.laf.rootpane.WebDialog;
 import com.alee.laf.scroll.WebScrollPane;
@@ -71,6 +73,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.xml.parsers.ParserConfigurationException;
@@ -87,6 +91,7 @@ import untiword.events.AuthorizationListener;
 import untiword.events.ListDocumentEvent;
 import untiword.events.NotFoundDocumentEvent;
 import untiword.events.RenameDocumentEvent;
+import untiword.events.RenameDocumentListener;
 import untiword.events.ReturnDataListener;
 import untiword.model.DocumentIDsAndNames;
 
@@ -441,8 +446,17 @@ public class UWGuiNew extends javax.swing.JFrame {
             docsListViewModel.addElement(new UWDocumentElement(resources.loadIcon("resources/document-add.png"), "New Document"));
         });
 
-        clientController.addRenameDocumentListener((RenameDocumentEvent event) -> {
-            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        clientController.addRenameDocumentListener(new RenameDocumentListener() {
+
+            @Override
+            public void RenameDocument(RenameDocumentEvent event) {
+                DocumentData documentData = docmentPane.getSelectedDocument();
+                docmentPane.closeDocument(documentData);
+                documentData.setTitle(event.getNewName());
+                docmentPane.openDocument(documentData);
+                docmentPane.revalidate();
+                docmentPane.repaint();
+            }
         });
 
         clientController.addListDocumentListener((ListDocumentEvent event) -> {
@@ -540,6 +554,10 @@ public class UWGuiNew extends javax.swing.JFrame {
             public void documentsReturned(String data) {
                 
             }
+        });
+        
+        clientController.setReveiceNotifyListener((String message) -> {
+            NotificationManager.showNotification (message);
         });
     }
 
@@ -795,6 +813,32 @@ public class UWGuiNew extends javax.swing.JFrame {
         fileMenu.add(openMenuItem);
 
         renameMenuItem = new WebMenuItem("Rename");
+        renameMenuItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
+                        , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
+                
+                while (newName == null || newName.contains("|") || newName.contains("~") || newName.equals("")){
+                    if (newName == null) { //user hits CANCEL
+                        return;
+                    }else if (newName.equals("")) { //user did not enter a name
+                        WebOptionPane.showMessageDialog ( null,
+                                "New Name can't be blank!", "Error", WebOptionPane.ERROR_MESSAGE );
+                    } else if (newName.contains("~") || newName.equals("|")) { //user enters ~/|
+                        WebOptionPane.showMessageDialog (null, 
+                                "Oops! Something Wrong!", "Error", WebOptionPane.ERROR_MESSAGE );
+                    }
+                    
+                    newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
+                        , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
+                }
+                UWEditor selectedEditor = (UWEditor) docmentPane.getActivePane().getSelected().getComponent();                
+                clientController.sendMessage(clientController.createControlMessage("rename",
+                        selectedEditor.getNum(), newName));
+            }
+        });
         fileMenu.add(renameMenuItem);
 
         saveasMenuItem = new WebMenuItem("Make a copy ...");
@@ -1294,8 +1338,11 @@ public class UWGuiNew extends javax.swing.JFrame {
             content.add ( new CenterPanel ( new GroupPanel ( 5, login, cancel ) ), "0,2,1,2" );
             SwingUtils.equalizeComponentsWidths ( login, cancel );
 
-            add ( content );
-
+            add ( content );          
+        }
+        
+        private void loginHotkeys(WebButton login)
+        {
             HotkeyManager.registerHotkey ( this, login, Hotkey.ESCAPE );
             HotkeyManager.registerHotkey ( this, login, Hotkey.ENTER );
         }
