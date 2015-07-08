@@ -63,7 +63,7 @@ public class DocxDocumentFilter extends DocumentFilter {
 
         if (action == EditType.INSERT) {
 
-            String content = text;
+            String content = text.replace("\n", "~");
             if (content.contains("|")) {
                 return;
             }
