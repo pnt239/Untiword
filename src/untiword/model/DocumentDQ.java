@@ -140,7 +140,7 @@ public class DocumentDQ {
         
         if(request.getAction().equals("INSERT")) {
             try {
-                source.insertString(request.getBeginning(), request.getContent(), null);
+                source.insertString(request.getBeginning(), request.getContent().replace("~", "\n"), null);
             } catch (BadLocationException ex) {
                 Logger.getLogger(DocumentDQ.class.getName()).log(Level.SEVERE, null, ex);
             }
