@@ -24,6 +24,7 @@ import com.alee.extended.panel.GroupPanel;
 import com.alee.extended.panel.GroupingType;
 import com.alee.extended.panel.WebButtonGroup;
 import com.alee.extended.tab.DocumentData;
+import com.alee.extended.tab.PaneData;
 import com.alee.extended.tab.WebDocumentPane;
 import com.alee.extended.window.WebPopOver;
 import com.alee.global.StyleConstants;
@@ -442,35 +443,12 @@ public class UWGuiNew extends javax.swing.JFrame {
 
             @Override
             public void RenameDocument(RenameDocumentEvent event) {
-                String newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
-                        , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
-                
-                while (newName == null || newName.contains("|") || newName.contains("~") || newName.equals("")){
-                    if (newName == null) { //user hits CANCEL
-                        return;
-                    }else if (newName.equals("")) { //user did not enter a name
-                        WebOptionPane.showMessageDialog ( null,
-                                "New Name can't be blank!", "Error", WebOptionPane.ERROR_MESSAGE );
-                    } else if (newName.contains("~") || newName.equals("|")) { //user enters ~/|
-                        WebOptionPane.showMessageDialog (null, 
-                                "Oops! Something Wrong!", "Error", WebOptionPane.ERROR_MESSAGE );
-                    }
-                    
-                    newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
-                        , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
-                }
-                 int idxSelected = (int) docListView.getSelectedIndex();
-                    if (idxSelected == 0) {
-                        createDocument();
-                        return;
-                    } else {
-                        idxSelected--;
-                    }
-                String nameId = clientController.getDocumentIdAndNames().get(idxSelected);
-                DocumentIDsAndNames docNameID = new DocumentIDsAndNames(nameId);
-                int num = docNameID.getNum();
-                clientController.sendMessage(clientController.createControlMessage("rename",
-                        num, newName));
+                DocumentData documentData = docmentPane.getSelectedDocument();
+                docmentPane.closeDocument(documentData);
+                documentData.setTitle(event.getNewName());
+                docmentPane.openDocument(documentData);
+                docmentPane.revalidate();
+                docmentPane.repaint();
             }
         });
 
@@ -830,18 +808,9 @@ public class UWGuiNew extends javax.swing.JFrame {
                     newName = WebOptionPane.showInputDialog (null, "Enter New Name:", "Input"
                         , JOptionPane.QUESTION_MESSAGE, null, null, "").toString();
                 }
-                 int idxSelected = (int) docListView.getSelectedIndex();
-                    if (idxSelected == 0) {
-                        createDocument();
-                        return;
-                    } else {
-                        idxSelected--;
-                    }
-                String nameId = clientController.getDocumentIdAndNames().get(idxSelected);
-                DocumentIDsAndNames docNameID = new DocumentIDsAndNames(nameId);
-                int num = docNameID.getNum();
+                UWEditor selectedEditor = (UWEditor) docmentPane.getActivePane().getSelected().getComponent();                
                 clientController.sendMessage(clientController.createControlMessage("rename",
-                        num, newName));
+                        selectedEditor.getNum(), newName));
             }
         });
         fileMenu.add(renameMenuItem);
